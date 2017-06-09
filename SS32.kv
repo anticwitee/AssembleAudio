@@ -1,0 +1,43 @@
+#:kivy 1.9.1
+
+<SS32>:
+    id: conversion
+    rows: 3
+    BoxLayout:
+        Button:
+            text: "Load file."
+
+    BoxLayout:
+        orientation: 'vertical'
+        BoxLayout:
+            Label:
+                text: "Title"
+            TextInput:
+                id: media_title
+                multiline: True
+            Label:
+                text: "Artist"
+            TextInput:
+                id: media_artist
+                multiline: True
+        BoxLayout:
+            Label:
+                text: "ID/Filename"
+            TextInput:
+                id: media_id
+                multiline: True
+            Label:
+                text: ";)"
+            TextInput:
+                id: media_why_not
+                multiline: True
+        BoxLayout:
+            Button:
+                text: "Play"
+            Button:
+                text: "Stop"
+            Button:
+                text: "Save"
+            Button:
+                text: "Convert"
+                on_press: conversion.Convert(media_title.text, media_artist.text, media_id.text, media_why_not.text)
