@@ -15,13 +15,17 @@ def WriteScottFile(header, data, output_name):
         which is the new scott file. The scott file contains
         the byte objects in header and data."""
 
-    with open(output_name, 'wb') as scott_file:
-        for item in header:
-            scott_file.write(item)
+    from os.path import exists
 
-        for item in data:
-            scott_file.write(item)
+    if not exists(output_name):
+        with open(output_name, 'wb') as scott_file:
+            for item in header:
+                scott_file.write(item)
 
+            for item in data:
+                scott_file.write(item)
+    else:
+        print("File {} already exists.".format(output_name))
 
 
 
@@ -45,7 +49,7 @@ def ProcessWav(file_name, title_str, id_num, artist):
         src_f_size = wav_file.read(4)
         f_size = int.from_bytes(src_f_size, byteorder='little') + 476
         header.append((f_size - 8).to_bytes(4, byteorder='little'))
-        
+
         #WAVE, fmt
         header.append(wav_file.read(8))
 
@@ -54,7 +58,7 @@ def ProcessWav(file_name, title_str, id_num, artist):
 
         #skips over SubChunk1size (for now)
         wav_file.seek(20)
-        
+
         #NumChannels, Sample rate, bitrate, blocksize, format
         rates_misc = wav_file.read(16)
         header.append(bytes(rates_misc))
@@ -88,7 +92,7 @@ def ExpandHeader(header, file_name, f_size, title_str, id_num, artist):
     samp_width = f.getsampwidth()
     samp_rate =  f.getframerate()
     f.close()
-    
+
     empty_bytes_4 = bytes([0,0,0,0])
 
     scott_sep = [0 for i in range(24)]
@@ -111,7 +115,7 @@ def ExpandHeader(header, file_name, f_size, title_str, id_num, artist):
 ##    title_str = input("Please enter a title: ")
     title = bytes(title_str, "ASCII")
     header.append(title)
-    
+
     title_padding = bytes(" " * (43 - len(title)), "ASCII")
     header.append(title_padding)
 
@@ -124,7 +128,7 @@ def ExpandHeader(header, file_name, f_size, title_str, id_num, artist):
 
 
 
-    
+
 
     #non-aligned cut number                    ATTENTION
     cut_num = bytes(id_num, "ASCII")
@@ -179,7 +183,7 @@ def ExpandHeader(header, file_name, f_size, title_str, id_num, artist):
 
 
 
-    
+
 
     #priorcat --> postcopy is ASCII (with padding in between)
     header.append(bytes(" " * 7, "ASCII"))
@@ -229,7 +233,7 @@ def ExpandHeader(header, file_name, f_size, title_str, id_num, artist):
 
 
 
-    
+
 
     #optional params
     header.append(bytes([0 for x in range(61)]))
@@ -239,7 +243,7 @@ def ExpandHeader(header, file_name, f_size, title_str, id_num, artist):
 
     #the "4" constant
     header.append(bytes([4, 0, 0,0]))
-    
+
     #NumSamples = NumBytes / (NumChannels * BitsPerSample / 8)
     #Doesn't quite work with mono
     num_samples = (f_size - 512) // (num_c * samp_width)
@@ -280,4 +284,3 @@ def SimpleReWrite(source, dst):
 
     source.close()
     dst.close()
-    
