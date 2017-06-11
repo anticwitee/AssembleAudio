@@ -1,11 +1,24 @@
 #:kivy 1.9.1
 
+<CstButton@Button>:
+    #background_normal: ''
+    background_color: (0.0, 0.6, 0.2, 1.0)
+
+<Cst2Button@Button>:
+    background_normal: ''
+    background_color: (0, 0.6, 0.30, 1.0)
+
+
+
 <SS32>:
+    load_text: load_text
     id: conversion
     rows: 3
     BoxLayout:
-        Button:
+        Cst2Button:
+            id: load_text
             text: "Load file."
+            on_release: conversion.show_load()
 
     BoxLayout:
         orientation: 'vertical'
@@ -15,29 +28,53 @@
             TextInput:
                 id: media_title
                 multiline: True
+                hint_text: "Title name, as long as it is less than 42 characters."
             Label:
                 text: "Artist"
             TextInput:
                 id: media_artist
                 multiline: True
+                hint_text: "Artist name, as long as it is less than 60 characters. "
         BoxLayout:
             Label:
                 text: "ID/Filename"
             TextInput:
                 id: media_id
                 multiline: True
+                hint_text: "Must contain just 4 consecutive numbers."
             Label:
                 text: ";)"
             TextInput:
                 id: media_why_not
                 multiline: True
+                hint_text: "The only purpose of this box is for layout. Likewise for the play, stop and save buttons."
         BoxLayout:
-            Button:
+            CstButton:
                 text: "Play"
-            Button:
+            CstButton:
                 text: "Stop"
-            Button:
+            CstButton:
                 text: "Save"
-            Button:
+            CstButton:
                 text: "Convert"
-                on_press: conversion.Convert(media_title.text, media_artist.text, media_id.text, media_why_not.text)
+                on_press: conversion.Convert(load_text.text, media_id.text, media_title.text, media_artist.text)
+
+
+<LoadDialog>:
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+        FileChooserIconView:
+            id: filechooser
+
+        BoxLayout:
+            size_hint_y: None
+            height: 30
+            Button:
+                text: "Cancel"
+                on_release: root.cancel()
+
+            Button:
+                text: "Load"
+                on_release: root.load(filechooser.path, filechooser.selection)
