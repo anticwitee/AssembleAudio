@@ -93,34 +93,31 @@ def ExpandHeader(header, file_name, f_size, title_str, id_num, artist):
     samp_rate =  f.getframerate()
     f.close()
 
-    empty_bytes_4 = bytes([0,0,0,0])
+    padd_1 = bytes([0])
+    padd_4 = bytes([0,0,0,0])
 
     scott_sep = [0 for i in range(24)]
     scott_sep = bytes(scott_sep)
     header.append(scott_sep)
 
+
+
+
+
     #Scott Headers
 
     #"Scot" and the 424 constant
 
-    header.append(bytes("scot", "ASCII"))
-    header.append(bytes([168, 1, 0, 0]))
+    scot = bytes("scot", "ASCII")
+    const_424 = bytes([168, 1, 0, 0])
 
     #Scratchpad
-    header.append(empty_bytes_4)
+    scratchpad = padd_4
 
     #Title                                          ATTENTION
     #43 bytes
-
-##    title_str = input("Please enter a title: ")
     title = bytes(title_str, "ASCII")
-    header.append(title)
-
     title_padding = bytes(" " * (43 - len(title)), "ASCII")
-    header.append(title_padding)
-
-
-
 
 
 
@@ -132,46 +129,44 @@ def ExpandHeader(header, file_name, f_size, title_str, id_num, artist):
 
     #non-aligned cut number                    ATTENTION
     cut_num = bytes(id_num, "ASCII")
-    header.append(cut_num)
-    header.append(bytes([0]))
+    align_1 = padd_1
 
     #approx duration THIS GETS OVERWRITTEN (GOOD, BUT)
-    header.append(bytes("00:09", "ASCII"))
+    apprx_dur = bytes("00:09", "ASCII")
 
     #cue-in
-    header.append(empty_bytes_4)
+    cue_in = padd_4
 
     #total_length                            ATTENTION
-    header.append(bytes([9,0,90,0]))
+    total_length = bytes([9,0,90,0])
 
     #Start/End Date (6 bytes each, MMDDYY)    ATTENTION
-    header.append(bytes("031107111220", "ASCII"))
+    s_e_dates = bytes("031107111220", "ASCII")
 
     #Start/End Hour. Hardcoded (1am-11pm)       ATTENTION
-    header.append(bytes([129, 151]))
+    s_e_hour = bytes([129, 151])
 
     #"digital"? Possibly just padding
-    header.append(bytes([0]))
+    digital = padd_1
 
     #SampleRate (/100)
     rate_div_100 = (samp_rate // 100).to_bytes(2, byteorder='little')
-    header.append(rate_div_100)
 
     #Mono/Stereo (ASCII)                        ATTENTION
     if num_c == 1:
         c_type = "M"
     else:
         c_type = "S"
-    header.append(bytes(c_type, "ASCII"))
+    c_type = bytes(c_type, "ASCII")
 
     #Compression....?
-    header.append(bytes([10]))
+    compres = bytes([10])
 
     #eomstrt (no clue)
-    header.append(bytes([88, 0, 0, 0]))
+    eomstrt = bytes([88, 0, 0, 0])
 
     #34 bytes of optional params
-    header.append(bytes([0 for i in range(34)]))
+    opt_params = bytes([0 for i in range(34)])
 
 
 
@@ -186,46 +181,41 @@ def ExpandHeader(header, file_name, f_size, title_str, id_num, artist):
 
 
     #priorcat --> postcopy is ASCII (with padding in between)
-    header.append(bytes(" " * 7, "ASCII"))
-    header.append(bytes([0]))
-    header.append(bytes(" " * 7, "ASCII"))
+    priorcat = bytes(" " * 7, "ASCII")
+    align_2 = padd_1
+    postcat = bytes(" " * 7, "ASCII")
 
     #130 bytes of optional params
-    header.append(bytes([0 for i in range(130)]))
+    opt_params_2 = bytes([0 for i in range(130)])
 
 
     #ASCII Artist + etc                               ATTENTION
-    #header.append(bytes(" " * 68, "ASCII"))
-##    artist = input("Please enter the artist name: ")
-    header.append(bytes(artist + " " * (68 - len(artist)), "ASCII"))
+    artist_etc = bytes(artist + " " * (68 - len(artist)), "ASCII"))
 
     #Intro, End, Year, padding
-    header.append(bytes("00" + (" " * 5), "ASCII"))
+    intro_yr = bytes("00" + (" " * 5), "ASCII")
 
     #Padding
-    header.append(bytes([0]))
+    align_3 = padd_1
 
     #Hour/Date Recorded (Hex/ASCII)
-    header.append(bytes([91]))
-    header.append(bytes("031107", "ASCII"))
+    hour_rec = bytes([91])
+    date_rec = bytes("031107", "ASCII")
 
     #Mpegbitrate/pitch
-    header.append(empty_bytes_4)
+    pitch = padd_4
 
     #playlevel?
-    header.append(bytes([255,255]))
+    playlevel = bytes([255,255])
 
     #lenvalid?
-    header.append(bytes([128]))
+    lenvalid = bytes([128])
 
     #FULL file size
-    header.append((f_size).to_bytes(4, byteorder='little'))
+    full_f_size = (f_size).to_bytes(4, byteorder='little')
 
     #newplaylev??
-    header.append((33768).to_bytes(2, byteorder='little'))
-
-
-
+    newplaylev = (33768).to_bytes(2, byteorder='little')
 
 
 
@@ -236,26 +226,34 @@ def ExpandHeader(header, file_name, f_size, title_str, id_num, artist):
 
 
     #optional params
-    header.append(bytes([0 for x in range(61)]))
+    opt_params_3 = bytes([0 for x in range(61)])
 
     #fact
-    header.append(bytes("fact", "ASCII"))
+    fact = bytes("fact", "ASCII")
 
     #the "4" constant
-    header.append(bytes([4, 0, 0,0]))
+    const_4 = bytes([4, 0, 0,0])
 
     #NumSamples = NumBytes / (NumChannels * BitsPerSample / 8)
     #Doesn't quite work with mono
     num_samples = (f_size - 512) // (num_c * samp_width)
-    header.append((num_samples).to_bytes(4, byteorder='little'))
+    b_num_samples = (num_samples).to_bytes(4, byteorder='little')
 
     #data
-    header.append(bytes("data", "ASCII"))
+    data = bytes("data", "ASCII")
 
     #filelength - 512
-    header.append((f_size - 512).to_bytes(4, byteorder='little'))
+    size_512 = (f_size - 512).to_bytes(4, byteorder='little')
 
 
+    header.extend(scot, const_424, scratchpad, title, title_padding,
+                  cut_num, align_1, apprx_dur, cue_in, total_length,
+                  s_e_dates, s_e_hour, digital, rate_div_100, c_type,
+                  compres, eomstrt, opt_params, priorcat, align_2,
+                  postcat, opt_params_2, artist_etc, intro_yr, align_3,
+                  hour_rec, date_rec, pitch, playlevel, lenvalid, 
+                  full_f_size, newplaylev, opt_params_3, fact, const_4,
+                  b_num_samples, data, size_512)
 
 
 def info(file_name):
