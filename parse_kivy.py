@@ -190,7 +190,7 @@ def ExpandHeader(header, file_name, f_size, title_str, id_num, artist):
 
 
     #ASCII Artist + etc                               ATTENTION
-    artist_etc = bytes(artist + " " * (68 - len(artist)), "ASCII"))
+    artist_etc = bytes(artist + " " * (68 - len(artist)), "ASCII")
 
     #Intro, End, Year, padding
     intro_yr = bytes("00" + (" " * 5), "ASCII")
@@ -246,14 +246,14 @@ def ExpandHeader(header, file_name, f_size, title_str, id_num, artist):
     size_512 = (f_size - 512).to_bytes(4, byteorder='little')
 
 
-    header.extend(scot, const_424, scratchpad, title, title_padding,
+    header.extend([scot, const_424, scratchpad, title, title_padding,
                   cut_num, align_1, apprx_dur, cue_in, total_length,
                   s_e_dates, s_e_hour, digital, rate_div_100, c_type,
                   compres, eomstrt, opt_params, priorcat, align_2,
                   postcat, opt_params_2, artist_etc, intro_yr, align_3,
                   hour_rec, date_rec, pitch, playlevel, lenvalid, 
                   full_f_size, newplaylev, opt_params_3, fact, const_4,
-                  b_num_samples, data, size_512)
+                  b_num_samples, data, size_512])
 
 
 def info(file_name):
