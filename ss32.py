@@ -5,47 +5,58 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.properties import ObjectProperty
+from kivy.properties import StringProperty
+from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.clock import Clock
+import parse_kivy
 
 
 
+class RootScreen(BoxLayout):
 
-class RootWidget(BoxLayout):
-
-    def gib_args(*args):
+    def gib_args(self, *args):
+        #filename, title, year, artist, ending, note, intro, EOM,
+        #s_date, e_date, s_hour, e_hour, b_audio, e_audio
         print(args)
 
-    def edit_scot(f_name = '', **kwargs):
-        #addr dict maps var names to
-        #byte addresses and length
-
-        #missing begin/end of audio, EOM, filename etc.
-        addr = {"Title": (72, 43), "Year": (406, 4), "Artist": (335, 34),
-                "Ending": (405, 1), "Note": (369, 34), "Start_Date": (133, 6),
-                "End_Date": (139, 6), "Start_Hour": (145, 1), "End_Hour": (146, 1),
-                }
-        print(kwargs)
+class TopMenu(BoxLayout):
+    pass
 
 
+class Frequent(BoxLayout):
+    pass
 
 
-class GridFile(GridLayout):
+class FileGrid(GridLayout):
 
-    def set_info(self, title, artist, end, filename):
+    _sel_file = StringProperty('')
+
+    def __init__(self, **kwargs):
+        super(FileGrid, self).__init__(**kwargs)
+        self._avail = 1
+        self._sel_row = None
+        self._sel_file = ""
+        self._sel_type = None
+        self._sel_start = None
+        self._sel_end = None
+
+    def set_info(self, title, artist, end, pathname):
+        #Takes in the file data, and updates the filegrid to represent
+        #and indicate the files that are loaded with their metadata.
 
 
-        arg_list = [title, artist, end, filename.split("\\")[-1], filename.split(".")[-1]]
-        row = None
-        for i, widget in enumerate(self.children[(-1 - self.cols)::-self.cols]):
-            if not widget.text:
-                row = i
-                break
-        if row != None:
-            start = (-1 - self.cols - (row*self.cols))
-            end = start - self.cols
-            for i, widget in enumerate(self.children[start:end:-1]):
+        length = len(self.children)
+        arg_list = [title, artist, end, pathname.split("\\")[-1], pathname.split(".")[-1], pathname]
+
+        if self._avail < length // self.cols:
+            end = length - (self._avail * self.cols)
+            start = end - self.cols
+            for i, widget in enumerate(reversed(self.children[start:end])):
                 widget.text = arg_list[i]
+            self._avail += 1
+
         else:
-            print("We full.")
+            print("Full capacity.")
 
 
     #FileChooserMethods
@@ -55,21 +66,31 @@ class GridFile(GridLayout):
                             size_hint=(0.9, 0.9))
         self._popup.open()
 
-    def load(self, path, filename):
-        #print(path, filename)
-        #self.load_text.text = filename[0]
-        try:
-            with open(filename[0], 'rb') as f:
-                f.seek(72)
-                title = f.read(43).decode("ascii")
-                f.seek(335)
-                artist = f.read(34).decode("ascii")
-            self.set_info(title, artist, "31/07/2077", filename[0])
+    def load(self, path, filenames):
+        print("Path: ", path)
+        print("Filenames: ", filenames)
 
 
-        except IOError:
-            print("Cannot find file {}".format(filename[0]))
-        self.dismiss_popup()
+        for filename in filenames:
+            #Should check file type first.
+            try:
+                with open(filename, 'rb') as f:
+                    f.seek(72)
+                    try:
+                        title = f.read(43).decode("ascii")
+                    except UnicodeDecodeError:
+                        title = "None"
+                    f.seek(335)
+                    try:
+                        artist = f.read(34).decode("ascii")
+                    except UnicodeDecodeError:
+                        artist = "None"
+                self.set_info(title, artist, "31/07/2077", filename)
+
+
+            except IOError:
+                print("Cannot find file {}".format(filename))
+            self.dismiss_popup()
 
     def dismiss_popup(self):
         self._popup.dismiss()
@@ -79,27 +100,46 @@ class GridFile(GridLayout):
 
     #Widget detection
     def on_touch_up(self, touch):
-        if self.collide_point(touch.x, touch.y):
-            num_rows = len(self.children) // self.cols
 
-            #top row
-            for widget in self.children[len(self.children) - self.cols:]:
-                if widget.collide_point(touch.x, touch.y):
-                    print(">Labels")
-                    break
+        if  not self.collide_point(touch.x, touch.y):
+            print("OVERRIDE ON TOUCH UP. PLS USE SUPER.")
+
+        elif touch.is_double_tap:
+            #Load, double-click
+            rows = len(self.children) // self.cols
+            if self._avail < rows:
+                print("Available slot: ", self._avail)
+                self.show_load()
             else:
-                #check for avail slots
-                for row, widget in enumerate(self.children[(-1 - self.cols)::-self.cols]):
-                    if not widget.text:
-                        #load file popup menu
-                        print("Available slot detected")
-                        self.show_load()
-                        break
-
-
+                print("No available slots.")
         else:
-            print("False positive.")
+            #Selection, single-click
+            for row, widget in enumerate(reversed(self.children[::self.cols])):
+                if touch.y >= widget.y:
 
+                    #Deselect (could optimise)
+                    for widget in self.children[self._sel_start: self._sel_end]:
+                        widget.background_color = (1, 1, 1, 1)
+
+                    end = len(self.children) - (row * self.cols)
+                    start = end - self.cols
+
+                    self._sel_file = self.children[start].text
+                    self._sel_type = self.children[start + 1].text
+                    self._sel_row = row
+                    self._sel_start = start
+                    self._sel_end = end
+
+                    #visual selection
+                    if self._sel_file:
+                        for widget in self.children[self._sel_start: self._sel_end]:
+                            widget.background_color = (0.0, 1.0, 1.0, 1.0)
+
+                    print("Selected Row: ", self._sel_row)
+                    print("Start", start, "End", end - 1)
+                    print("File Type:", self._sel_type)
+                    print("Filename:", self._sel_file)
+                    break
 
 
 class LoadDialog(FloatLayout):
@@ -108,11 +148,73 @@ class LoadDialog(FloatLayout):
 
 
 
+class UserInput(BoxLayout):
+    path_name = StringProperty('')
+
+    def edit_scot(self, filename, *args, rename = ''):
+        #Takes in a variable amount of attributes. If they are the correct
+        #length, then they will be converted to the appropriate data type
+        #and added to an "edit" list. The edit list is then passed onto a
+        #function that writes the actual bytes to the file.
+
+        valid_len = (43, 4, 34, 1, 34, 2, 6, 6, 6, 1, 1)
+        dtype = [("title", "str"), ("year", "str"), ("artist" ,"str"),
+                 ("end", "str"), ("note", "str"), ("intro", "str"),
+                 ("eom", "int"), ("s_date", "str"), ("e_date", "str"),
+                 ("s_hour", "str"), ("e_hour", "str")]
+        edit = []
+        print(args)
+
+        for i in range(len(args)):
+            if len(args[i]) == valid_len[i]:
+                data = args[i]
+                try:
+                    if dtype[i][1] == "int":
+                        data = int(data)
+                except:
+                    print("Arg {} should be an int. Data: {}.".format(i, data))
+                else:
+                    name, typ = dtype[i]
+                    edit.append((name, typ, data))
+            elif (i == 0 or i == 2 or i == 4) and args[i]:
+                data = args[i] + (" " * (valid_len[i] - len(args[i])))
+                name, typ = dtype[i]
+                edit.append((name, typ, data))
+            elif args[i]:
+                print("Arg {} is a rogue, data: {}".format(i, args[i]))
+
+        print("Edit List: ", edit)
+        print("Rename, ", rename)
+        print("Filename, ", filename)
+        #parse_kivy.EditScott(filename, edit, rename = rename)
 
 
-class SS32App(App):
+#DELET DIS
+class Ayy(Screen):
+    pass
+
+
+class Config(Screen):
+
+    def play(self, path):
+        from kivy.core.audio import SoundLoader
+        sound = SoundLoader.load(path)
+
+        print('Path: ', path)
+        if sound:
+            print("Sound found at %s" % sound.source)
+            print("Sound is %3.f seconds" % sound.length)
+            sound.volume = 1
+            sound.play()
+        else:
+            print("File %s not found." % path)
+
+
+
+
+class ss32App(App):
     def build(self):
-        return RootWidget()
+        return
 
 if __name__ == '__main__':
-    SS32App().run()
+    ss32App().run()

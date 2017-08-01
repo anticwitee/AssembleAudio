@@ -1,8 +1,15 @@
-
 <GridButton@Button>:
     text: ""
 
-<TopMenu@Button>:
+<TabText@TextInput>:
+    write_tab: False
+
+<EditingL@Label>:
+    background_color: 0, 1, 0, 1
+    size_hint_x: None
+    width: 125
+
+<TopMenuBut@Button>:
     background_color: 0.96, 0.96, 0.96, 1
 
 <FreqButtons@Button>:
@@ -12,28 +19,14 @@
     background_color: 0, 0.3, 0, 1
     text: "Info"
 
-<RootWidget>:
+RootScreen:
     id: root_wid
     orientation: "vertical"
-    BoxLayout:
+    TopMenu:
         size_hint_y: None
         size: root.width, root.height / 30
-        TopMenu:
-            text: "File"
-        TopMenu:
-            text: "Edit"
-        TopMenu:
-            text: "View"
-        Button:
-            color: 0, 0, 0, 1
-            background_normal: ""
-            background_color: 0.93, 0.93, 0.93, 1
-            text: "Tools"
-            border: 10, 10, 10, 10
-        TopMenu:
-            text: "Help"
 
-    BoxLayout:
+    Frequent:
         size_hint_y: None
         size: root.width, root.height / 20
         FreqButtons:
@@ -50,135 +43,111 @@
             text: "Network"
         FreqButtons:
             text: "Format"
-    BoxLayout:
-        BoxLayout:
-            size_hint_x: None
-            size: root.width / 5, root.height
-            orientation: "vertical"
-            Button:
-                background_color: 0, 0.7, 0, 1
-                text: "Files/Directories"
-            Button:
-                background_color: 0, 0.7, 0, 1
-                text: "Network queue"
-        BoxLayout:
-            orientation: "vertical"
-            GridFile:
-                cols: 5
-                size_hint_y: None
-                size: root.width, root.height / 10 * 4
+        FreqButtons:
+            text: "<---"
+            on_press: screen_manager.current = 'edit'
+        FreqButtons:
+            text: "--->"
+            on_press: screen_manager.current = 'network'
 
-                #Would want this to be more dynamic
-                Label:
-                    text: "Title"
-                Label:
-                    text: "Artist"
-                Label:
-                    text: "End Date"
-                Label:
-                    text: "Filename"
-                Label:
-                    text: "Type"
-                GridButton:
-                GridButton:
-                GridButton:
-                GridButton:
-                GridButton:
-                GridButton:
-                GridButton:
-                GridButton:
-                GridButton:
-                GridButton:
-                GridButton:
-                GridButton:
-                GridButton:
-                GridButton:
-                GridButton:
-
-            GridLayout:
-                cols: 4
-                #cols_minimum: {0: 1000, 2: 1, 3: 1}
-                background_color: 0, 0.5, 0, 1
-                Label:
-                    text: "Filename"
-
-                TextInput:
-                    id: f_name
-                    hint_text: "Enter filename here."
-                Label:
-                    text: "Title"
-                TextInput:
-                    id: title
-                    hint_text: "Enter title here."
-                    input_filter: lambda text, from_undo: text[:43 - len(self.text)]
-                Label:
-                    text: "Year"
-                TextInput:
-                    id: yr
-                    hint_text: "Unknown format."
-                    input_filter: lambda text, from_undo: text[:4 - len(self.text)]
-                Label:
-                    text: "Artist"
-                TextInput:
-                    id: artist
-                    hint_text: "Enter artist name here."
-                    input_filter: lambda text, from_undo: text[:34 - len(self.text)]
-                Label:
-                    text: "Ending"
-                TextInput:
-                    id: ending
-                    hint_text: "Unknown format."
-                    input_filter: lambda text, from_undo: text[:1 - len(self.text)]
-                Label:
-                    text: "Note"
-                TextInput:
-                    id: note
-                    hint_text: "Extras"
-                    input_filter: lambda text, from_undo: text[:34 - len(self.text)]
-                Label:
-                    text: "Start Date:"
-                TextInput:
-                    hint_text: "21/06/2017"
-                Label:
-                    text: "End Date:"
-                TextInput:
-                    hint_text: "23/06/2017"
-                Label:
-                    text: "Start hour"
-                TextInput:
-                    hint_text: "00:00:00"
-                Label:
-                    text: "End Hour"
-                TextInput:
-                    hint_text: "00:59:59"
-                Label:
-                    text: "Begin of Audio:"
-                TextInput:
-                    hint_text: "00:00:00.000"
-                Label:
-                    text: "End of Audio:"
-                TextInput:
-                    hint_text: "00:00:00.000"
-                Button:
-                    text: "Play"
-                Label:
-                    text: "Set EOM"
-                TextInput:
-                    hint_text: "00.0"
-                Button:
-                    text: "Save"
-                    on_press: root_wid.gib_args(f_name.text, title.text, yr.text, artist.text, ending.text, note.text)
-
-
+    ScreenManager:
+        id: screen_manager
+        Screen:
+            name: "edit"
+            BoxLayout:
+                BoxLayout:
+                    size_hint_x: None
+                    size: root.width / 5, root.height
+                    orientation: "vertical"
+                    Button:
+                        background_color: 0, 0.7, 0, 1
+                        text: "Files/Directories"
+                    Button:
+                        background_color: 0, 0.7, 0, 1
+                        text: "Network queue"
+                BoxLayout:
+                    orientation: "vertical"
+                    FileGrid:
+                        id: file_grid
+                        size_hint_y: None
+                        size: root.width, root.height / 10 * 4
+                    UserInput:
+                        path_name: file_grid._sel_file
+        Screen:
+            name: 'network'
+            Config
 
     BoxLayout:
         size_hint_y: None
         size: root.width, root.height / 30
+        InfoButtons:
+        InfoButtons:
+        InfoButtons:
+        InfoButtons:
 
-        InfoButtons:
-        InfoButtons:
-        InfoButtons:
-        InfoButtons:
+
+
+<TopMenu>:
+    TopMenuBut:
+        text: "File"
+    TopMenuBut:
+        text: "Edit"
+    TopMenuBut:
+        text: "View"
+    Button:
+        color: 0, 0, 0, 1
+        background_normal: ""
+        background_color: 0.93, 0.93, 0.93, 1
+        text: "Tools"
+        border: 10, 10, 10, 10
+    TopMenuBut:
+        text: "Help"
+
+
+<Frequent>:
+
+
+
+<FileGrid>:
+    cols: 6
+
+    #Would want this to be more dynamic
+    Label:
+        text: "Title"
+    Label:
+        text: "Artist"
+    Label:
+        text: "End Date"
+    Label:
+        text: "Filename"
+    Label:
+        text: "Type"
+    Label:
+        text: "Pathname"
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
 
 
 
@@ -189,14 +158,149 @@
         orientation: "vertical"
         FileChooserIconView:
             id: filechooser
-
+            multiselect: True
         BoxLayout:
             size_hint_y: None
             height: 30
             Button:
                 text: "Cancel"
                 on_release: root.cancel()
-
             Button:
                 text: "Load"
                 on_release: root.load(filechooser.path, filechooser.selection)
+
+
+<UserInput>:
+    BoxLayout:
+        orientation: "vertical"
+        BoxLayout:
+            EditingL:
+                text: "Filename:"
+            TabText:
+                id: rename
+                hint_text: "Enter filename here."
+        BoxLayout:
+            EditingL:
+                text: "Title:"
+            TabText:
+                id: title
+                hint_text: "Enter title here."
+                input_filter: lambda text, from_undo: text[:43 - len(self.text)]
+            EditingL:
+                text: "Year:"
+            TabText:
+                id: yr
+                hint_text: "Unknown format."
+                input_filter: lambda text, from_undo: text[:4 - len(self.text)]
+        BoxLayout:
+            EditingL:
+                text: "Artist:"
+            TabText:
+                id: artist
+                hint_text: "Enter artist name here."
+                input_filter: lambda text, from_undo: text[:34 - len(self.text)]
+            EditingL:
+                text: "Ending:"
+            TabText:
+                id: ending
+                hint_text: "Unknown format."
+                input_filter: lambda text, from_undo: text[:1 - len(self.text)]
+        BoxLayout:
+            EditingL:
+                text: "Note:"
+            TabText:
+                id: note
+                hint_text: "Extras"
+                input_filter: lambda text, from_undo: text[:34 - len(self.text)]
+            EditingL:
+                text: "Intro"
+            TabText:
+                id: intro
+                hint_text: "00"
+                input_filter: lambda text, from_undo: text[:2 - len(self.text)]
+            EditingL:
+                text: "Set EOM"
+            TabText:
+                id: eom
+                hint_text: "00.0"
+                input_filter: lambda text, from_undo: text[:6 - len(self.text)]
+
+        BoxLayout:
+            EditingL:
+                text: "Start Date:"
+            TabText:
+                id: s_date
+                hint_text: "21/06/2017"
+                input_filter: lambda text, from_undo: text[:6 - len(self.text)]
+
+            EditingL:
+                text: "Start hour"
+            TabText:
+                id: s_hour
+                hint_text: "00:00:00"
+                input_filter: lambda text, from_undo: text[:1 - len(self.text)]
+            EditingL:
+                text: "Begin of Audio:"
+            TabText:
+                hint_text: "00:00:00.000"
+
+        BoxLayout:
+            EditingL:
+                text: "End Date:"
+            TabText:
+                id: e_date
+                hint_text: "23/06/2017"
+                input_filter: lambda text, from_undo: text[:6 - len(self.text)]
+            EditingL:
+                text: "End Hour"
+            TabText:
+                id: e_hour
+                hint_text: "00:59:59"
+                input_filter: lambda text, from_undo: text[:1 - len(self.text)]
+            EditingL:
+                text: "End of Audio:"
+            TabText:
+                hint_text: "00:00:00.000"
+
+        BoxLayout:
+            Button:
+                text: "Play"
+            Button:
+                text: "Save"
+                on_press: root.edit_scot(root.path_name, title.text, yr.text, artist.text, ending.text, note.text, intro.text, eom.text, s_date.text, e_date.text, s_hour.text, e_hour.text, rename = rename.text)
+
+
+
+
+
+
+
+<Ayy>:
+    BoxLayout:
+        Button:
+            text: "Ayyy lmao"
+        Button:
+            text: "pls see dis"
+
+
+<Config>:
+    BoxLayout:
+        orientation: 'vertical'
+        BoxLayout:
+            Label:
+                text: "Network IP Addr:"
+            TextInput:
+                hint_text: "192.168.1.1"
+            TextInput:
+                id: path
+                hint_text: "Path for audio"
+            Button:
+                text: "Play"
+                on_press: root.play(path.text)
+        BoxLayout:
+            Label:
+                text: "Stat1"
+            Label:
+                text: "Stat2"
+            Label:
+                text: "Stat3"

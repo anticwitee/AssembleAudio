@@ -29,6 +29,32 @@ def WriteScottFile(header, data, output_name):
 
 
 
+def EditScott(file_name, edit, rename = ''):
+    #For WAV files.
+    #Takes in a file name to write to, "file_name" and a list of attributes
+    #to write, called "edit".
+
+    addr = {"title" : 72, "year" : 406, "artist" : 335, "end" : 405,
+            "note" : 369, "intro" : 403, "eom" : 152, "s_date" : 133,
+            "e_date" : 139, "s_hour" : 145, "e_hour": 146}
+    print(file_name)
+    try:
+        with open(file_name, 'rb+') as f:
+            f.seek(60)
+            if f.read(4) == bytes("scot", "ASCII"):
+                for attrib in edit:
+                    f.seek(addr[attrib[0]])
+                    if attrib[1] == "str":
+                        f.write(bytes(attrib[2], "ASCII"))
+                    else:
+                        #attrocity committed
+                        f.write((attrib[2]).to_bytes(6, byteorder='little'))
+            else:
+                print("***EditScott error, {} is not a SCOTTWAV file.".format(file_name))
+
+    except IOError:
+        print("***EditScott cannot open {}. ***".format(file_name))
+
 
 def ProcessWav(file_name, title_str, id_num, artist):
     """Gather necessary info from a RIFF WAV header.
@@ -251,7 +277,7 @@ def ExpandHeader(header, file_name, f_size, title_str, id_num, artist):
                   s_e_dates, s_e_hour, digital, rate_div_100, c_type,
                   compres, eomstrt, opt_params, priorcat, align_2,
                   postcat, opt_params_2, artist_etc, intro_yr, align_3,
-                  hour_rec, date_rec, pitch, playlevel, lenvalid, 
+                  hour_rec, date_rec, pitch, playlevel, lenvalid,
                   full_f_size, newplaylev, opt_params_3, fact, const_4,
                   b_num_samples, data, size_512])
 
