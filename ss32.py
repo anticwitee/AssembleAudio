@@ -1,52 +1,145 @@
-
 from kivy.app import App
-from kivy.uix.gridlayout import GridLayout
-from kivy.uix.label import Label
-from kivy.uix.textinput import TextInput
-from kivy.properties import ObjectProperty
+from kivy.uix.button import Button
 from kivy.uix.popup import Popup
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout
+from kivy.properties import ObjectProperty
+from kivy.properties import StringProperty
+from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.clock import Clock
 import parse_kivy
 
-class SS32(GridLayout):
-
-    loadfile = ObjectProperty(None)
-    media_why_not = ObjectProperty(None)
-
-    def Convert(self, source, m_id, title, artist):
-        print(self, source, m_id, title, artist)
-        from os import chdir
-        t_path = source.split('\\')
-        path = "\\".join(t_path[:-1])
-        print(path)
-
-        chdir(path)
-        parse_kivy.ConvertScott(source, "SP" + m_id + ".wav", title, m_id, artist)
 
 
+class RootScreen(BoxLayout):
+
+    def gib_args(self, *args):
+        #filename, title, year, artist, ending, note, intro, EOM,
+        #s_date, e_date, s_hour, e_hour, b_audio, e_audio
+        print(args)
+
+class TopMenu(BoxLayout):
+    pass
+
+
+class Frequent(BoxLayout):
+    pass
+
+
+class FileGrid(GridLayout):
+
+    _sel_file = StringProperty('')
+
+    def __init__(self, **kwargs):
+        super(FileGrid, self).__init__(**kwargs)
+        self._avail = 1
+        self._sel_row = None
+        self._sel_file = ""
+        self._sel_type = None
+        self._sel_start = None
+        self._sel_end = None
+
+    def set_info(self, title, artist, end, pathname):
+        #Takes in the file data, and updates the filegrid to represent
+        #and indicate the files that are loaded with their metadata.
+
+
+        length = len(self.children)
+        arg_list = [title, artist, end, pathname.split("\\")[-1], pathname.split(".")[-1], pathname]
+
+        if self._avail < length // self.cols:
+            end = length - (self._avail * self.cols)
+            start = end - self.cols
+            for i, widget in enumerate(reversed(self.children[start:end])):
+                widget.text = arg_list[i]
+            self._avail += 1
+
+        else:
+            print("Full capacity.")
+
+
+    #FileChooserMethods
     def show_load(self):
         content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
         self._popup = Popup(title="Load file", content=content,
                             size_hint=(0.9, 0.9))
         self._popup.open()
 
-    def load(self, path, filename):
-        if True:
-            self.load_text.text = filename[0]
-        else:
-            with open(os.path.join(path, filename[0])) as stream:
-                self.text_input.text = stream.read()
+    def load(self, path, filenames):
+        print("Path: ", path)
+        print("Filenames: ", filenames)
 
-        self.dismiss_popup()
+
+        for filename in filenames:
+            #Should check file type first.
+            try:
+                with open(filename, 'rb') as f:
+                    f.seek(72)
+                    try:
+                        title = f.read(43).decode("ascii")
+                    except UnicodeDecodeError:
+                        title = "None"
+                    f.seek(335)
+                    try:
+                        artist = f.read(34).decode("ascii")
+                    except UnicodeDecodeError:
+                        artist = "None"
+                self.set_info(title, artist, "31/07/2077", filename)
+
+
+            except IOError:
+                print("Cannot find file {}".format(filename))
+            self.dismiss_popup()
 
     def dismiss_popup(self):
         self._popup.dismiss()
 
 
-class SS32App(App):
 
-    def build(self):
-        return SS32()
+
+    #Widget detection
+    def on_touch_up(self, touch):
+
+        if  not self.collide_point(touch.x, touch.y):
+            print("OVERRIDE ON TOUCH UP. PLS USE SUPER.")
+
+        elif touch.is_double_tap:
+            #Load, double-click
+            rows = len(self.children) // self.cols
+            if self._avail < rows:
+                print("Available slot: ", self._avail)
+                self.show_load()
+            else:
+                print("No available slots.")
+        else:
+            #Selection, single-click
+            for row, widget in enumerate(reversed(self.children[::self.cols])):
+                if touch.y >= widget.y:
+
+                    #Deselect (could optimise)
+                    for widget in self.children[self._sel_start: self._sel_end]:
+                        widget.background_color = (1, 1, 1, 1)
+
+                    end = len(self.children) - (row * self.cols)
+                    start = end - self.cols
+
+                    self._sel_file = self.children[start].text
+                    self._sel_type = self.children[start + 1].text
+                    self._sel_row = row
+                    self._sel_start = start
+                    self._sel_end = end
+
+                    #visual selection
+                    if self._sel_file:
+                        for widget in self.children[self._sel_start: self._sel_end]:
+                            widget.background_color = (0.0, 1.0, 1.0, 1.0)
+
+                    print("Selected Row: ", self._sel_row)
+                    print("Start", start, "End", end - 1)
+                    print("File Type:", self._sel_type)
+                    print("Filename:", self._sel_file)
+                    break
 
 
 class LoadDialog(FloatLayout):
@@ -55,5 +148,73 @@ class LoadDialog(FloatLayout):
 
 
 
+class UserInput(BoxLayout):
+    path_name = StringProperty('')
+
+    def edit_scot(self, filename, *args, rename = ''):
+        #Takes in a variable amount of attributes. If they are the correct
+        #length, then they will be converted to the appropriate data type
+        #and added to an "edit" list. The edit list is then passed onto a
+        #function that writes the actual bytes to the file.
+
+        valid_len = (43, 4, 34, 1, 34, 2, 6, 6, 6, 1, 1)
+        dtype = [("title", "str"), ("year", "str"), ("artist" ,"str"),
+                 ("end", "str"), ("note", "str"), ("intro", "str"),
+                 ("eom", "int"), ("s_date", "str"), ("e_date", "str"),
+                 ("s_hour", "str"), ("e_hour", "str")]
+        edit = []
+        print(args)
+
+        for i in range(len(args)):
+            if len(args[i]) == valid_len[i]:
+                data = args[i]
+                try:
+                    if dtype[i][1] == "int":
+                        data = int(data)
+                except:
+                    print("Arg {} should be an int. Data: {}.".format(i, data))
+                else:
+                    name, typ = dtype[i]
+                    edit.append((name, typ, data))
+            elif (i == 0 or i == 2 or i == 4) and args[i]:
+                data = args[i] + (" " * (valid_len[i] - len(args[i])))
+                name, typ = dtype[i]
+                edit.append((name, typ, data))
+            elif args[i]:
+                print("Arg {} is a rogue, data: {}".format(i, args[i]))
+
+        print("Edit List: ", edit)
+        print("Rename, ", rename)
+        print("Filename, ", filename)
+        #parse_kivy.EditScott(filename, edit, rename = rename)
+
+
+#DELET DIS
+class Ayy(Screen):
+    pass
+
+
+class Config(Screen):
+
+    def play(self, path):
+        from kivy.core.audio import SoundLoader
+        sound = SoundLoader.load(path)
+
+        print('Path: ', path)
+        if sound:
+            print("Sound found at %s" % sound.source)
+            print("Sound is %3.f seconds" % sound.length)
+            sound.volume = 1
+            sound.play()
+        else:
+            print("File %s not found." % path)
+
+
+
+
+class ss32App(App):
+    def build(self):
+        return
+
 if __name__ == '__main__':
-    SS32App().run()
+    ss32App().run()

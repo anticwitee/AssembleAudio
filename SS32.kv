@@ -1,63 +1,154 @@
-#:kivy 1.9.1
+<GridButton@Button>:
+    text: ""
 
-<CstButton@Button>:
-    #background_normal: ''
-    background_color: (0.0, 0.6, 0.2, 1.0)
+<TabText@TextInput>:
+    write_tab: False
 
-<Cst2Button@Button>:
-    background_normal: ''
-    background_color: (0, 0.6, 0.30, 1.0)
+<EditingL@Label>:
+    background_color: 0, 1, 0, 1
+    size_hint_x: None
+    width: 125
 
+<TopMenuBut@Button>:
+    background_color: 0.96, 0.96, 0.96, 1
 
+<FreqButtons@Button>:
+    background_color: 0, 0.9, 0, 1
 
-<SS32>:
-    load_text: load_text
-    id: conversion
-    rows: 3
+<InfoButtons@Button>:
+    background_color: 0, 0.3, 0, 1
+    text: "Info"
+
+RootScreen:
+    id: root_wid
+    orientation: "vertical"
+    TopMenu:
+        size_hint_y: None
+        size: root.width, root.height / 30
+
+    Frequent:
+        size_hint_y: None
+        size: root.width, root.height / 20
+        FreqButtons:
+            text: "New"
+        FreqButtons:
+            text: "Copy"
+        FreqButtons:
+            text: "Delete"
+        FreqButtons:
+            text: "Renum"
+        FreqButtons:
+            text: "Find"
+        FreqButtons:
+            text: "Network"
+        FreqButtons:
+            text: "Format"
+        FreqButtons:
+            text: "<---"
+            on_press: screen_manager.current = 'edit'
+        FreqButtons:
+            text: "--->"
+            on_press: screen_manager.current = 'network'
+
+    ScreenManager:
+        id: screen_manager
+        Screen:
+            name: "edit"
+            BoxLayout:
+                BoxLayout:
+                    size_hint_x: None
+                    size: root.width / 5, root.height
+                    orientation: "vertical"
+                    Button:
+                        background_color: 0, 0.7, 0, 1
+                        text: "Files/Directories"
+                    Button:
+                        background_color: 0, 0.7, 0, 1
+                        text: "Network queue"
+                BoxLayout:
+                    orientation: "vertical"
+                    FileGrid:
+                        id: file_grid
+                        size_hint_y: None
+                        size: root.width, root.height / 10 * 4
+                    UserInput:
+                        path_name: file_grid._sel_file
+        Screen:
+            name: 'network'
+            Config
+
     BoxLayout:
-        Cst2Button:
-            id: load_text
-            text: "Load file."
-            on_release: conversion.show_load()
+        size_hint_y: None
+        size: root.width, root.height / 30
+        InfoButtons:
+        InfoButtons:
+        InfoButtons:
+        InfoButtons:
 
-    BoxLayout:
-        orientation: 'vertical'
-        BoxLayout:
-            Label:
-                text: "Title"
-            TextInput:
-                id: media_title
-                multiline: True
-                hint_text: "Title name, as long as it is less than 42 characters."
-            Label:
-                text: "Artist"
-            TextInput:
-                id: media_artist
-                multiline: True
-                hint_text: "Artist name, as long as it is less than 60 characters. "
-        BoxLayout:
-            Label:
-                text: "ID/Filename"
-            TextInput:
-                id: media_id
-                multiline: True
-                hint_text: "Must contain just 4 consecutive numbers."
-            Label:
-                text: ";)"
-            TextInput:
-                id: media_why_not
-                multiline: True
-                hint_text: "The only purpose of this box is for layout. Likewise for the play, stop and save buttons."
-        BoxLayout:
-            CstButton:
-                text: "Play"
-            CstButton:
-                text: "Stop"
-            CstButton:
-                text: "Save"
-            CstButton:
-                text: "Convert"
-                on_press: conversion.Convert(load_text.text, media_id.text, media_title.text, media_artist.text)
+
+
+<TopMenu>:
+    TopMenuBut:
+        text: "File"
+    TopMenuBut:
+        text: "Edit"
+    TopMenuBut:
+        text: "View"
+    Button:
+        color: 0, 0, 0, 1
+        background_normal: ""
+        background_color: 0.93, 0.93, 0.93, 1
+        text: "Tools"
+        border: 10, 10, 10, 10
+    TopMenuBut:
+        text: "Help"
+
+
+<Frequent>:
+
+
+
+<FileGrid>:
+    cols: 6
+
+    #Would want this to be more dynamic
+    Label:
+        text: "Title"
+    Label:
+        text: "Artist"
+    Label:
+        text: "End Date"
+    Label:
+        text: "Filename"
+    Label:
+        text: "Type"
+    Label:
+        text: "Pathname"
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+
 
 
 <LoadDialog>:
@@ -67,14 +158,149 @@
         orientation: "vertical"
         FileChooserIconView:
             id: filechooser
-
+            multiselect: True
         BoxLayout:
             size_hint_y: None
             height: 30
             Button:
                 text: "Cancel"
                 on_release: root.cancel()
-
             Button:
                 text: "Load"
                 on_release: root.load(filechooser.path, filechooser.selection)
+
+
+<UserInput>:
+    BoxLayout:
+        orientation: "vertical"
+        BoxLayout:
+            EditingL:
+                text: "Filename:"
+            TabText:
+                id: rename
+                hint_text: "Enter filename here."
+        BoxLayout:
+            EditingL:
+                text: "Title:"
+            TabText:
+                id: title
+                hint_text: "Enter title here."
+                input_filter: lambda text, from_undo: text[:43 - len(self.text)]
+            EditingL:
+                text: "Year:"
+            TabText:
+                id: yr
+                hint_text: "Unknown format."
+                input_filter: lambda text, from_undo: text[:4 - len(self.text)]
+        BoxLayout:
+            EditingL:
+                text: "Artist:"
+            TabText:
+                id: artist
+                hint_text: "Enter artist name here."
+                input_filter: lambda text, from_undo: text[:34 - len(self.text)]
+            EditingL:
+                text: "Ending:"
+            TabText:
+                id: ending
+                hint_text: "Unknown format."
+                input_filter: lambda text, from_undo: text[:1 - len(self.text)]
+        BoxLayout:
+            EditingL:
+                text: "Note:"
+            TabText:
+                id: note
+                hint_text: "Extras"
+                input_filter: lambda text, from_undo: text[:34 - len(self.text)]
+            EditingL:
+                text: "Intro"
+            TabText:
+                id: intro
+                hint_text: "00"
+                input_filter: lambda text, from_undo: text[:2 - len(self.text)]
+            EditingL:
+                text: "Set EOM"
+            TabText:
+                id: eom
+                hint_text: "00.0"
+                input_filter: lambda text, from_undo: text[:6 - len(self.text)]
+
+        BoxLayout:
+            EditingL:
+                text: "Start Date:"
+            TabText:
+                id: s_date
+                hint_text: "21/06/2017"
+                input_filter: lambda text, from_undo: text[:6 - len(self.text)]
+
+            EditingL:
+                text: "Start hour"
+            TabText:
+                id: s_hour
+                hint_text: "00:00:00"
+                input_filter: lambda text, from_undo: text[:1 - len(self.text)]
+            EditingL:
+                text: "Begin of Audio:"
+            TabText:
+                hint_text: "00:00:00.000"
+
+        BoxLayout:
+            EditingL:
+                text: "End Date:"
+            TabText:
+                id: e_date
+                hint_text: "23/06/2017"
+                input_filter: lambda text, from_undo: text[:6 - len(self.text)]
+            EditingL:
+                text: "End Hour"
+            TabText:
+                id: e_hour
+                hint_text: "00:59:59"
+                input_filter: lambda text, from_undo: text[:1 - len(self.text)]
+            EditingL:
+                text: "End of Audio:"
+            TabText:
+                hint_text: "00:00:00.000"
+
+        BoxLayout:
+            Button:
+                text: "Play"
+            Button:
+                text: "Save"
+                on_press: root.edit_scot(root.path_name, title.text, yr.text, artist.text, ending.text, note.text, intro.text, eom.text, s_date.text, e_date.text, s_hour.text, e_hour.text, rename = rename.text)
+
+
+
+
+
+
+
+<Ayy>:
+    BoxLayout:
+        Button:
+            text: "Ayyy lmao"
+        Button:
+            text: "pls see dis"
+
+
+<Config>:
+    BoxLayout:
+        orientation: 'vertical'
+        BoxLayout:
+            Label:
+                text: "Network IP Addr:"
+            TextInput:
+                hint_text: "192.168.1.1"
+            TextInput:
+                id: path
+                hint_text: "Path for audio"
+            Button:
+                text: "Play"
+                on_press: root.play(path.text)
+        BoxLayout:
+            Label:
+                text: "Stat1"
+            Label:
+                text: "Stat2"
+            Label:
+                text: "Stat3"
