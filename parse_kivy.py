@@ -29,32 +29,53 @@ def WriteScottFile(header, data, output_name):
 
 
 
-def EditScott(file_name, edit, rename = ''):
+def EditScott(file_name, edit, new_name = ''):
     #For WAV files.
     #Takes in a file name to write to, "file_name" and a list of attributes
     #to write, called "edit".
+    from os import rename
 
     addr = {"title" : 72, "year" : 406, "artist" : 335, "end" : 405,
             "note" : 369, "intro" : 403, "eom" : 152, "s_date" : 133,
             "e_date" : 139, "s_hour" : 145, "e_hour": 146}
+
     print(file_name)
+    temp_is_scott = False
+
     try:
         with open(file_name, 'rb+') as f:
             f.seek(60)
             if f.read(4) == bytes("scot", "ASCII"):
-                for attrib in edit:
-                    f.seek(addr[attrib[0]])
-                    if attrib[1] == "str":
-                        f.write(bytes(attrib[2], "ASCII"))
+                temp_is_scott = True
+                for name, data in edit:
+                    f.seek(addr[name])
+                    if type(data) == type("str"):
+                        f.write(bytes(data, "ASCII"))
                     else:
                         #attrocity committed
-                        f.write((attrib[2]).to_bytes(6, byteorder='little'))
+                        num_bytes = DigitCount(data)
+                        f.write((data).to_bytes(num_bytes, byteorder='little'))
             else:
                 print("***EditScott error, {} is not a SCOTTWAV file.".format(file_name))
 
     except IOError:
         print("***EditScott cannot open {}. ***".format(file_name))
 
+    if new_name and temp_is_scott:
+        try:
+            #change DIR
+            rename(file_name, new_name)
+        except IOError:
+            print("Cannot rename {} to {}.".format(file_name, new_name))
+
+
+def DigitCount(n):
+    #Doesn't handle negative nums
+    x = 10
+    power = 1
+    while x ** power < n:
+        power += 1
+    return power
 
 def ProcessWav(file_name, title_str, id_num, artist):
     """Gather necessary info from a RIFF WAV header.

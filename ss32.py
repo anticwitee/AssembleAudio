@@ -40,13 +40,13 @@ class FileGrid(GridLayout):
         self._sel_start = None
         self._sel_end = None
 
-    def set_info(self, title, artist, end, pathname):
+    def set_info(self, id, title, artist, end, pathname):
         #Takes in the file data, and updates the filegrid to represent
         #and indicate the files that are loaded with their metadata.
 
 
         length = len(self.children)
-        arg_list = [title, artist, end, pathname.split("\\")[-1], pathname.split(".")[-1], pathname]
+        arg_list = [id, title, artist, end, pathname.split("\\")[-1], pathname.split(".")[-1], pathname]
 
         if self._avail < length // self.cols:
             end = length - (self._avail * self.cols)
@@ -80,12 +80,25 @@ class FileGrid(GridLayout):
                         title = f.read(43).decode("ascii")
                     except UnicodeDecodeError:
                         title = "None"
+
+                    try:
+                        id_num = f.read(4).decode("ascii")
+                    except UnicodeDecodeError:
+                        id_num = "None"
+
+                    f.seek(139)
+                    try:
+                        end_date = f.read(6).decode("ascii")
+                    except UnicodeDecodeError:
+                        end_date = "None"
+
                     f.seek(335)
                     try:
                         artist = f.read(34).decode("ascii")
                     except UnicodeDecodeError:
                         artist = "None"
-                self.set_info(title, artist, "31/07/2077", filename)
+
+                self.set_info(id_num, title, artist, end_date, filename)
 
 
             except IOError:
@@ -174,23 +187,23 @@ class UserInput(BoxLayout):
                 except:
                     print("Arg {} should be an int. Data: {}.".format(i, data))
                 else:
-                    name, typ = dtype[i]
-                    edit.append((name, typ, data))
+                    name = dtype[i][0]
+                    edit.append((name, data))
             elif (i == 0 or i == 2 or i == 4) and args[i]:
                 data = args[i] + (" " * (valid_len[i] - len(args[i])))
-                name, typ = dtype[i]
-                edit.append((name, typ, data))
+                name = dtype[i][0]
+                edit.append((name, data))
             elif args[i]:
                 print("Arg {} is a rogue, data: {}".format(i, args[i]))
 
         print("Edit List: ", edit)
         print("Rename, ", rename)
         print("Filename, ", filename)
-        #parse_kivy.EditScott(filename, edit, rename = rename)
+        parse_kivy.EditScott(filename, edit, new_name = rename)
 
 
-#DELET DIS
-class Ayy(Screen):
+#testable screen
+class AScreen(Screen):
     pass
 
 
