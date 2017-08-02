@@ -6,6 +6,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.properties import ObjectProperty
 from kivy.properties import StringProperty
+from kivy.properties import NumericProperty
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.clock import Clock
 import parse_kivy
@@ -164,6 +165,54 @@ class LoadDialog(FloatLayout):
 class UserInput(BoxLayout):
     path_name = StringProperty('')
 
+    def __init__(self, **kwargs):
+        super(UserInput, self).__init__(**kwargs)
+        self._sound = None
+        self._sound_pos = None
+        self._sound_clock = None
+
+    def update_volume(self, volume):
+        if self._sound:
+            self._sound.volume = volume
+
+    def update_bar(self, dt):
+        if self._sound:
+            self.ids.p_bar.value = (self._sound.get_pos() / self._sound.length) * 100
+
+    def play(self, path):
+        from kivy.core.audio import SoundLoader
+
+        #Could be more elegant
+        if self._sound and self._sound.source == path:
+            if self._sound.state == "play":
+                self._sound_pos = self._sound.get_pos()
+                self._sound_clock.cancel()
+                self._sound.stop()
+                print("Postion:", self._sound_pos)
+            else:
+                print("Seek to:", self._sound_pos)
+                self._sound_clock()
+                self._sound.play()
+                self._sound.seek(self._sound_pos)
+        else:
+            if self._sound:
+                self._sound_clock.cancel()
+                self._sound.stop()
+                self._sound_pos = None
+                self._sound.unload()
+
+            sound = SoundLoader.load(path)
+            self._sound = sound
+            print('Path: ', path)
+            if sound:
+                print("Sound found at", sound.source)
+                print("Sound is %3.f seconds" % sound.length)
+                progress = Clock.schedule_interval(self.update_bar, 1)
+                self._sound_clock = progress
+                sound.play()
+            else:
+                print("Cannot play the file %s." % path)
+
     def edit_scot(self, filename, *args, rename = ''):
         #Takes in a variable amount of attributes. If they are the correct
         #length, then they will be converted to the appropriate data type
@@ -209,19 +258,7 @@ class AScreen(Screen):
 
 
 class Config(Screen):
-
-    def play(self, path):
-        from kivy.core.audio import SoundLoader
-        sound = SoundLoader.load(path)
-
-        print('Path: ', path)
-        if sound:
-            print("Sound found at %s" % sound.source)
-            print("Sound is %3.f seconds" % sound.length)
-            sound.volume = 1
-            sound.play()
-        else:
-            print("File %s not found." % path)
+    pass
 
 
 

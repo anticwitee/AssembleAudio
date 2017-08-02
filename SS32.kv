@@ -270,6 +270,16 @@ RootScreen:
         BoxLayout:
             Button:
                 text: "Play"
+                on_press: root.play(root.path_name)
+            ProgressBar:
+                id: p_bar
+                value: 0
+            Slider:
+                min: 0
+                max: 1
+                value: 1
+                step: 0.01
+                on_touch_move: root.update_volume(self.value)
             Button:
                 text: "Save"
                 on_press: root.edit_scot(root.path_name, title.text, yr.text, artist.text, ending.text, note.text, intro.text, eom.text, s_date.text, e_date.text, s_hour.text, e_hour.text, rename = rename.text)
@@ -296,12 +306,15 @@ RootScreen:
                 text: "Network IP Addr:"
             TextInput:
                 hint_text: "192.168.1.1"
-            TextInput:
-                id: path
-                hint_text: "Path for audio"
-            Button:
-                text: "Play"
-                on_press: root.play(path.text)
+            Slider:
+                min: 0
+                max: 1
+                value: 0.5
+                step: 0.1
+                on_touch_move: print(self.value)
+            ProgressBar:
+                value: 50
+
         BoxLayout:
             Label:
                 text: "Stat1"

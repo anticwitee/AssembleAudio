@@ -361,10 +361,10 @@ def getWavInfo(filename, format_hex = False):
 
     try:
         with open(filename, 'rb') as wav_file:
-            for data in header_data:
-                data = wav_file.read(length[i])
+            for header in header_data:
+                data = wav_file.read(header[1])
                 if not format_hex:
-                    if d_type[i]:
+                    if header[2]:
                         try:
                             data = int.from_bytes(data, byteorder='little')
                         except TypeError:
@@ -375,7 +375,7 @@ def getWavInfo(filename, format_hex = False):
                         except UnicodeDecodeError:
                             print("---getWavInfo should've got an ASCII decodeable seq.---")
 
-                print("%-25s: %s" % (name, data))
+                print("%-25s: %s" % (header[0], data))
 
     except IOError:
         print("---getWavInfo couldn't open file {}---".format(filename))
