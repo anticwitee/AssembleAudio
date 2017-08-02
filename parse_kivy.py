@@ -319,6 +319,67 @@ def info(file_name):
         print("---Info: File {0} cannot be opened.".format(file_name))
 
 
+
+def getWavInfo(filename, format_hex = False):
+    #Prints out the header in the format
+    # Name: Data
+
+    header_data = (['RIFF', 4, False], ['File length - 8', 4, True],
+            ['WAVE', 4, False], ['fmt', 4, False], ['40??', 4, True],
+            ['Format category', 2, True], ['Number of channels', 2, True],
+            ['Sampling Rate', 4, True], ['Avg bytes/sec', 4, True],
+            ['Data block size', 2, True], ['Format', 2, True],
+            ['White space', 24, True], ['scot', 4, False],
+            ['424 constant (0xa801)', 4, True], ['Alter (scratchpad)', 1, True],
+            ['Attrib (scratchpad)', 1, True], ['Artnum (scratchpad)', 2, True],
+            ['Title', 43, False], ['Cut Num', 4, False], ['Padding', 1, True],
+            ['Approx duration', 5, False], ['Cue-in (secs)', 2, True],
+            ['Cue-in (hundredths)', 2, True], ['Total length (seconds)', 2, True],
+            ['Total length (hundredths)', 2, True], ['Start Date', 6, False],
+            ['End Date', 6, False], ['Start Hour', 1, True],
+            ['End Hour', 1, True], ['Digital', 1, True], ['Sample Rate', 2, True],
+            ['Mono/Stereo', 1, False], ['Compress', 1, True],
+            ['Eomstrt', 4, True], ['EOM (hundredths from end)', 2, True],
+            ['Atrrib2', 4, True], ['Future', 12, True],
+            ['catfontcolor', 4, True], ['catcolor', 4, True],
+            ['segeompos', 4, True], ['vtstartsecs', 2, True],
+            ['vtstarthunds', 2, True], ['priorcat', 3, True],
+            ['priorcopy', 4, True], ['priorpadd', 1, True],
+            ['postcat', 3, True], ['postcopy', 4, True],
+            ['postpadd', 1, True], ['hrcanplay', 21, True],
+            ['future', 108, True], ['Artist', 34, False],
+            ['Etc/Note', 34, False], ['Intro', 2, False],
+            ['End', 1, False], ['Year', 4, False], ['Obsolete2', 1, True],
+            ['Hour Recorded', 1, True], ['Date Recorded', 6, False],
+            ['Mpegbitrate', 2, True], ['pitch', 2, True], ['playlevel', 2, True],
+            ['lenvalid', 1, True], ['filelength', 4, True], ['newplaylev', 2, True],
+            ['chopsize', 4, True], ['vteomovr', 4, True], ['desiredlen', 4, True],
+            ['triggers[4]', 16, True], ['fillout', 33, True],
+            ['fact', 4, False], ['4?????', 4, True],
+            ['Number of Audio Samples', 4, True], ['Data', 4, False],
+            ['file length - 512', 4, True])
+
+    try:
+        with open(filename, 'rb') as wav_file:
+            for data in header_data:
+                data = wav_file.read(length[i])
+                if not format_hex:
+                    if d_type[i]:
+                        try:
+                            data = int.from_bytes(data, byteorder='little')
+                        except TypeError:
+                            print("---getWavInfo should've got an Int.---")
+                    else:
+                        try:
+                            data = data.decode("ascii")
+                        except UnicodeDecodeError:
+                            print("---getWavInfo should've got an ASCII decodeable seq.---")
+
+                print("%-25s: %s" % (name, data))
+
+    except IOError:
+        print("---getWavInfo couldn't open file {}---".format(filename))
+
 def SimpleReWrite(source, dst):
 
     source = open(source, 'rb')
