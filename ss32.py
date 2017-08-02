@@ -176,6 +176,7 @@ class UserInput(BoxLayout):
             self._sound.volume = volume
 
     def update_bar(self, dt):
+        #set max to reduce computation
         if self._sound:
             self.ids.p_bar.value = (self._sound.get_pos() / self._sound.length) * 100
 
