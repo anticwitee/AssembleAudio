@@ -34,12 +34,13 @@ def EditScott(file_name, edit, new_name = ''):
     #Takes in a file name to write to, "file_name" and a list of attributes
     #to write, called "edit".
     from os import rename
+    from os.path import dirname, isfile, join
 
     addr = {"title" : 72, "year" : 406, "artist" : 335, "end" : 405,
             "note" : 369, "intro" : 403, "eom" : 152, "s_date" : 133,
             "e_date" : 139, "s_hour" : 145, "e_hour": 146}
 
-    print(file_name)
+    print("EditScott: Filename: ", file_name)
     temp_is_scott = False
 
     try:
@@ -52,21 +53,25 @@ def EditScott(file_name, edit, new_name = ''):
                     if type(data) == type("str"):
                         f.write(bytes(data, "ASCII"))
                     else:
-                        #attrocity committed
+                        #May be a more efficient way
                         num_bytes = DigitCount(data)
                         f.write((data).to_bytes(num_bytes, byteorder='little'))
             else:
-                print("***EditScott error, {} is not a SCOTTWAV file.".format(file_name))
+                print("---EditScott error, {} is not a SCOTTWAV file.---".format(file_name))
 
     except IOError:
-        print("***EditScott cannot open {}. ***".format(file_name))
+        print("---EditScott cannot open {}. ---".format(file_name))
 
     if new_name and temp_is_scott:
         try:
-            #change DIR
-            rename(file_name, new_name)
+            #don't want to rename while file is open.
+            new_f_name = join(dirname(file_name), new_name)
+            if isfile(new_f_name):
+                print("---EditScott file {} already exists, not renaming.----".format(new_f_name))
+            else:
+                rename(file_name, new_f_name)
         except IOError:
-            print("Cannot rename {} to {}.".format(file_name, new_name))
+            print("---EditScott Cannot rename {} to {}.---".format(file_name, new_name))
 
 
 def DigitCount(n):
