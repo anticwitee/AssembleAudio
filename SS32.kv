@@ -1,3 +1,11 @@
+#:import get_color_from_hex kivy.utils.get_color_from_hex
+#:set pad_value_large 10
+#:set pad_value_small 5
+
+
+
+#PADDING DOESNT DECREASE WIDGET SIZE (HITBOX)
+
 <GridButton@Button>:
     text: ""
 
@@ -5,23 +13,33 @@
     write_tab: False
 
 <EditingL@Label>:
-    background_color: 0, 1, 0, 1
     size_hint_x: None
     width: 125
 
 <TopMenuBut@Button>:
-    background_color: 0.96, 0.96, 0.96, 1
+    #background_color: 0.96, 0.96, 0.96, 1
+    color: 1, 1, 1, 1
+    background_color: get_color_from_hex("031926")
+    background_normal: ""
 
 <FreqButtons@Button>:
-    background_color: 0, 0.9, 0, 1
+    background_normal: ""
+    background_color: get_color_from_hex("468189")
 
 <InfoButtons@Button>:
-    background_color: 0, 0.3, 0, 1
+    background_color: get_color_from_hex("031926")
+    background_normal: ""
     text: "Info"
 
 RootScreen:
     id: root_wid
     orientation: "vertical"
+    canvas.before:
+        Color:
+            rgba: get_color_from_hex("30424d")
+        Rectangle:
+            pos: self.pos
+            size: self.size
     TopMenu:
         size_hint_y: None
         size: root.width, root.height / 30
@@ -56,15 +74,21 @@ RootScreen:
             name: "edit"
             BoxLayout:
                 BoxLayout:
+                    padding: pad_value_small
                     size_hint_x: None
                     size: root.width / 5, root.height
                     orientation: "vertical"
+                    canvas.before:
+                        Color:
+                            rgba: get_color_from_hex("262728")
+                        Rectangle:
+                            pos: self.pos[0] + pad_value_small, self.pos[1] + pad_value_small
+                            size: self.size[0] - (2 * pad_value_small), self.size[1] - (2 * pad_value_small)
                     Button:
-                        background_color: 0, 0.7, 0, 1
+                        background_color: get_color_from_hex("5779a4")
+                        background_normal: ""
                         text: "Files/Directories"
-                    Button:
-                        background_color: 0, 0.7, 0, 1
-                        text: "Network queue"
+                    NetworkQueue:
                 BoxLayout:
                     orientation: "vertical"
                     FileGrid:
@@ -94,12 +118,8 @@ RootScreen:
         text: "Edit"
     TopMenuBut:
         text: "View"
-    Button:
-        color: 0, 0, 0, 1
-        background_normal: ""
-        background_color: 0.93, 0.93, 0.93, 1
+    TopMenuBut:
         text: "Tools"
-        border: 10, 10, 10, 10
     TopMenuBut:
         text: "Help"
 
@@ -107,9 +127,44 @@ RootScreen:
 <Frequent>:
 
 
+<NetworkQueue>:
+    cols: 2
+    Label:
+        text: "Filename"
+    Label:
+        text: "Pathname"
+    GridButton:
+    GridButton:
+        id: path_0
+    GridButton:
+    GridButton:
+        id: path_1
+    GridButton:
+    GridButton:
+        id: path_2
+    GridButton:
+    GridButton:
+        id: path_3
+    Button:
+        text: "Send"
+        background_color: get_color_from_hex("5779a4")
+        background_normal: ""
+        on_touch_up: root.send_files((path_0.text, path_1.text, path_2.text, path_3.text))
+    Button:
+        text: "Log"
+        background_color: get_color_from_hex("5779a4")
+        background_normal: ""
+        on_touch_up: root.display_log()
 
 <FileGrid>:
     cols: 7
+    padding: pad_value_large
+    canvas.before:
+        Color:
+            rgba: get_color_from_hex("262728")
+        Rectangle:
+            pos: self.pos[0] + pad_value_large, self.pos[1] + pad_value_large
+            size: self.size[0] - (2 * pad_value_large), self.size[1] - (2 * pad_value_large)
 
     #Would want this to be more dynamic
     Label:
@@ -176,116 +231,141 @@ RootScreen:
 
 
 <UserInput>:
+    orientation: 'vertical'
+    padding: pad_value_large
+    canvas.before:
+        Color:
+            rgba: get_color_from_hex("262728")
+        Rectangle:
+            pos: self.pos[0] + pad_value_large, self.pos[1] + pad_value_large
+            size: self.size[0] - (2 * pad_value_large), self.size[1] - (2 * pad_value_large)
     BoxLayout:
-        orientation: "vertical"
-        BoxLayout:
-            EditingL:
-                text: "Filename:"
-            TabText:
-                id: rename
-                hint_text: "Enter filename here."
-        BoxLayout:
-            EditingL:
-                text: "Title:"
-            TabText:
-                id: title
-                hint_text: "Enter title here."
-                input_filter: lambda text, from_undo: text[:43 - len(self.text)]
-            EditingL:
-                text: "Year:"
-            TabText:
-                id: yr
-                hint_text: "Unknown format."
-                input_filter: lambda text, from_undo: text[:4 - len(self.text)]
-        BoxLayout:
-            EditingL:
-                text: "Artist:"
-            TabText:
-                id: artist
-                hint_text: "Enter artist name here."
-                input_filter: lambda text, from_undo: text[:34 - len(self.text)]
-            EditingL:
-                text: "Ending:"
-            TabText:
-                id: ending
-                hint_text: "Unknown format."
-                input_filter: lambda text, from_undo: text[:1 - len(self.text)]
-        BoxLayout:
-            EditingL:
-                text: "Note:"
-            TabText:
-                id: note
-                hint_text: "Extras"
-                input_filter: lambda text, from_undo: text[:34 - len(self.text)]
-            EditingL:
-                text: "Intro"
-            TabText:
-                id: intro
-                hint_text: "00"
-                input_filter: lambda text, from_undo: text[:2 - len(self.text)]
-            EditingL:
-                text: "Set EOM"
-            TabText:
-                id: eom
-                hint_text: "00.0"
-                input_filter: lambda text, from_undo: text[:6 - len(self.text)]
+        EditingL:
+            text: "Filename:"
+        TabText:
+            id: rename
+            hint_text: "Enter filename here."
+    BoxLayout:
+        EditingL:
+            text: "Title:"
+        TabText:
+            id: title
+            hint_text: "Enter title here."
+            input_filter: lambda text, from_undo: text[:43 - len(self.text)]
+        EditingL:
+            text: "Year:"
+        TabText:
+            id: yr
+            hint_text: "Unknown format."
+            input_filter: lambda text, from_undo: text[:4 - len(self.text)]
+    BoxLayout:
+        EditingL:
+            text: "Artist:"
+        TabText:
+            id: artist
+            hint_text: "Enter artist name here."
+            input_filter: lambda text, from_undo: text[:34 - len(self.text)]
+        EditingL:
+            text: "Ending:"
+        TabText:
+            id: ending
+            hint_text: "Unknown format."
+            input_filter: lambda text, from_undo: text[:1 - len(self.text)]
+    BoxLayout:
+        EditingL:
+            text: "Note:"
+        TabText:
+            id: note
+            hint_text: "Extras"
+            input_filter: lambda text, from_undo: text[:34 - len(self.text)]
+        EditingL:
+            text: "Intro"
+        TabText:
+            id: intro
+            hint_text: "00"
+            input_filter: lambda text, from_undo: text[:2 - len(self.text)]
+        EditingL:
+            text: "Set EOM"
+        TabText:
+            id: eom
+            hint_text: "00.0"
+            input_filter: lambda text, from_undo: text[:6 - len(self.text)]
 
-        BoxLayout:
-            EditingL:
-                text: "Start Date:"
-            TabText:
-                id: s_date
-                hint_text: "21/06/2017"
-                input_filter: lambda text, from_undo: text[:6 - len(self.text)]
+    BoxLayout:
+        EditingL:
+            text: "Start Date:"
+        TabText:
+            id: s_date
+            hint_text: "21/06/2017"
+            input_filter: lambda text, from_undo: text[:6 - len(self.text)]
 
-            EditingL:
-                text: "Start hour"
-            TabText:
-                id: s_hour
-                hint_text: "00:00:00"
-                input_filter: lambda text, from_undo: text[:1 - len(self.text)]
-            EditingL:
-                text: "Begin of Audio:"
-            TabText:
-                hint_text: "00:00:00.000"
+        EditingL:
+            text: "Start hour"
+        TabText:
+            id: s_hour
+            hint_text: "00:00:00"
+            input_filter: lambda text, from_undo: text[:1 - len(self.text)]
+        EditingL:
+            text: "Begin of Audio:"
+        TabText:
+            hint_text: "00:00:00.000"
 
-        BoxLayout:
-            EditingL:
-                text: "End Date:"
-            TabText:
-                id: e_date
-                hint_text: "23/06/2017"
-                input_filter: lambda text, from_undo: text[:6 - len(self.text)]
-            EditingL:
-                text: "End Hour"
-            TabText:
-                id: e_hour
-                hint_text: "00:59:59"
-                input_filter: lambda text, from_undo: text[:1 - len(self.text)]
-            EditingL:
-                text: "End of Audio:"
-            TabText:
-                hint_text: "00:00:00.000"
+    BoxLayout:
+        EditingL:
+            text: "End Date:"
+        TabText:
+            id: e_date
+            hint_text: "23/06/2017"
+            input_filter: lambda text, from_undo: text[:6 - len(self.text)]
+        EditingL:
+            text: "End Hour"
+        TabText:
+            id: e_hour
+            hint_text: "00:59:59"
+            input_filter: lambda text, from_undo: text[:1 - len(self.text)]
+        EditingL:
+            text: "End of Audio:"
+        TabText:
+            hint_text: "00:00:00.000"
 
-        BoxLayout:
-            Button:
-                text: "Play"
-                on_press: root.play(root.path_name)
-            ProgressBar:
-                id: p_bar
-                value: 0
-            Slider:
-                id: volume_slider
-                min: 0
-                max: 1
-                value: 1
-                step: 0.01
-                value_track: True
-                value_track_color: 0, 1, 1, 1
-                on_touch_move: root.update_volume(self.value)
-            Button:
-                text: "Save"
-                on_press: root.edit_scot(root.path_name, title.text, yr.text, artist.text, ending.text, note.text, intro.text, eom.text, s_date.text, e_date.text, s_hour.text, e_hour.text, rename = rename.text)
+    GridLayout:
+        canvas.before:
+            Color:
+                rgba: get_color_from_hex("a9adb5")
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        cols: 4
+        spacing: 10
+        Button:
+            size_hint_x: None
+            width: 100
+            text: "Play"
+            background_color: get_color_from_hex("5779a4")
+            background_normal: ""
+            on_press: root.play(root.path_name)
+        ProgressBar:
+            id: p_bar
+            value: 0
+        Slider:
+            size_hint_x: None
+            width: 100
+            id: volume_slider
+            min: 0
+            max: 1
+            value: 1
+            step: 0.01
+            value_track: True
+            value_track_color: 0, 1, 1, 1
+            on_touch_move: root.update_volume(self.value)
+        Button:
+            text: "Save"
+            size_hint_x: None
+            width: 100
+            background_color: get_color_from_hex("5779a4")
+            background_normal: ""
+            on_press: root.edit_scot(root.path_name, title.text, yr.text, artist.text, ending.text, note.text, intro.text, eom.text, s_date.text, e_date.text, s_hour.text, e_hour.text, rename = rename.text)
 
 
 
@@ -305,23 +385,95 @@ RootScreen:
     BoxLayout:
         orientation: 'vertical'
         BoxLayout:
+            orientation: 'vertical'
             Label:
                 text: "Network IP Addr:"
             TextInput:
                 hint_text: "192.168.1.1"
+            Label:
+                text: "Font size"
+            Slider:
+                min: 1
+                max: 100
+                value: 12
+                step: 1
+                on_touch_move: for widget in test_area.children: widget.font_size = self.value
+            Label:
+                text: "Size hint X"
             Slider:
                 min: 0
                 max: 1
-                value: 0.5
+                value: 1
                 step: 0.1
-                on_touch_move: print(self.value)
-            ProgressBar:
-                value: 50
-
-        BoxLayout:
+                on_touch_move: for widget in test_area.children: widget.size_hint_x = self.value
             Label:
-                text: "Stat1"
+                text: "Size hint Y"
+            Slider:
+                min: 0
+                max: 1
+                value: 1
+                step: 0.1
+                on_touch_move: for widget in test_area.children: widget.size_hint_y = self.value
+            Label:
+                text: "Toggle orientation"
+            Switch:
+                on_touch_up: test_area.orientation = 'horizontal' if self.active else 'vertical'
+
+
+        GridLayout:
+            id: test_area
+            cols: 4
+            Label:
+                canvas.before:
+                    Color:
+                        rgba: 1, 0, 0, 1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+                text: "File Type"
             Label:
                 text: "Stat2"
             Label:
-                text: "Stat3"
+                text: "File Length"
+            Label:
+                text: "Stat4"
+            Label:
+                text: "Number of channels"
+            Label:
+                text: "Stat2"
+            Label:
+                text: "Sampling rate"
+            Label:
+                text: "Stat4"
+            Label:
+                text: "PCM"
+            Label:
+                text: "Stat2"
+            Label:
+                text: "Scot"
+            Label:
+                text: "Stat4"
+            Label:
+                text: "Title"
+            Label:
+                text: "Stat2"
+            Label:
+                text: "ID"
+            Label:
+                text: "Stat4"
+            Label:
+                text: "Start hour"
+            Label:
+                text: "Stat2"
+            Label:
+                text: "End hour"
+            Label:
+                text: "Stat4"
+            Label:
+                text: "Start date"
+            Label:
+                text: "Stat2"
+            Label:
+                text: "End date"
+            Label:
+                text: "Stat4"
