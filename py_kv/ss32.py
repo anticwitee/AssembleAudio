@@ -8,6 +8,7 @@ from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.scrollview import ScrollView
 from kivy.properties import ObjectProperty
 from kivy.properties import StringProperty
 from kivy.properties import NumericProperty
@@ -130,18 +131,28 @@ class FileGrid(GridLayout):
         #and indicate the files that are loaded with their metadata.
         from os.path import dirname, basename, splitext
 
-        length = len(self.children)
+        rows = len(self.children) // self.cols
+        threshold = 3
         arg_list = [id, title, artist, end, basename(pathname), splitext(pathname)[1], pathname]
 
-        if self._avail < length // self.cols:
-            end = length - (self._avail * self.cols)
-            start = end - self.cols
-            for i, widget in enumerate(reversed(self.children[start:end])):
-                widget.text = arg_list[i]
-            self._avail += 1
+        #If < threshold available rows left, add more
+        print("Avail", self._avail)
+        print("Rows", rows)
+        if (self._avail + threshold) >= rows:
+            num_rows_to_add = 3
+            print("Current: {}".format(len(self.children)))
+            for i in range(num_rows_to_add):
+                print("Hello friend, new row {} added.".format(i))
+                for j in range(self.cols):
+                    self.add_widget(Button(text='', valign='middle', size_hint_y=None, height=50, background_color=(1,0,0,1)))
+            print("Post: {}".format(len(self.children)))
 
-        else:
-            print("Full capacity.")
+        length = len(self.children)
+        end = length - (self._avail * self.cols)
+        start = end - self.cols
+        for i, widget in enumerate(reversed(self.children[start:end])):
+            widget.text = arg_list[i]
+        self._avail += 1
 
 
     #FileChooserMethods

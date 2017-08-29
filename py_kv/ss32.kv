@@ -7,7 +7,11 @@
 #PADDING DOESNT DECREASE WIDGET SIZE (HITBOX)
 
 <GridButton@Button>:
-    text: ""
+    text_size: self.width - pad_value_large, self.height - pad_value_large
+    valign: 'middle'
+    text: ''
+    size_hint_y: None
+    height: 50
 
 <TabText@TextInput>:
     write_tab: False
@@ -91,10 +95,14 @@ RootScreen:
                     NetworkQueue:
                 BoxLayout:
                     orientation: "vertical"
-                    FileGrid:
-                        id: file_grid
+                    ScrollView:
                         size_hint_y: None
                         size: root.width, root.height / 10 * 4
+                        FileGrid:
+                            id: file_grid
+                            size_hint_y: None
+                            size: root.width, root.height / 10 * 4
+                            height: self.minimum_height
                     UserInput:
                         path_name: file_grid._sel_file
         Screen:
@@ -169,18 +177,25 @@ RootScreen:
     #Would want this to be more dynamic
     Label:
         text: "ID"
+        size_hint_y: None
     Label:
         text: "Title"
+        size_hint_y: None
     Label:
         text: "Artist"
+        size_hint_y: None
     Label:
         text: "End Date"
+        size_hint_y: None
     Label:
         text: "Filename"
+        size_hint_y: None
     Label:
         text: "Type"
+        size_hint_y: None
     Label:
         text: "Pathname"
+        size_hint_y: None
     GridButton:
     GridButton:
     GridButton:
@@ -209,6 +224,7 @@ RootScreen:
     GridButton:
     GridButton:
     GridButton:
+
 
 
 <LoadDialog>:
