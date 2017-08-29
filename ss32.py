@@ -4,6 +4,7 @@ Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 from kivy.app import App
 from kivy.uix.button import Button
 from kivy.uix.popup import Popup
+from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout
@@ -29,6 +30,86 @@ class TopMenu(BoxLayout):
 
 class Frequent(BoxLayout):
     pass
+
+
+class NetworkQueue(GridLayout):
+
+    def __init__(self, **kwargs):
+        super(NetworkQueue, self).__init__(**kwargs)
+        self._avail = 1
+
+
+    def send_files(self, pathnames):
+        #Should the validation be elsewhere....
+        from ftplib import FTP
+        from os.path import basename
+
+        for pathname in pathnames:
+            if pathname:
+                ip = ""
+                ftp = FTP(ip)
+                ftp.login()
+                print("PWD:", ftp.pwd())
+                print(ftp.getwelcome())
+
+                #store files
+                for pathname in pathnames:
+                    filename = basename(pathname)
+                    try:
+                        ftp.storbinary('STOR ' + filename, open(filename, 'rb'))
+                    except IOError:
+                        print('---send_files cannot send open {}.---'.format(pathname))
+
+    def display_log(self):
+        pass
+
+    def show_load(self):
+        content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
+        self._popup = Popup(title="Load file", content=content,
+                            size_hint=(0.9, 0.9))
+        self._popup.open()
+
+    def load(self, path, filenames):
+        print(path, filenames)
+        self.set_info(path, filenames)
+        self.dismiss_popup()
+
+    def dismiss_popup(self):
+        self._popup.dismiss()
+
+    def set_info(self, path, filenames):
+        from os.path import basename
+
+        length = len(self.children)
+        num_rows = length // self.cols -1 #send/log
+        for filename in filenames:
+            arg_list = [basename(filename), filename]
+            if self._avail < num_rows:
+                end = length - (self._avail * self.cols)
+                start = end - self.cols
+                for i, widget in enumerate(reversed(self.children[start:end])):
+                    widget.text = arg_list[i]
+                self._avail += 1
+
+            else:
+                print("Network Queue: Full capacity.")
+
+    def on_touch_up(self, touch):
+
+        if not self.collide_point(touch.x, touch.y):
+            print("Super.....(NetworkQueue)")
+        elif touch.is_double_tap:
+            #Load, double-click
+            rows = len(self.children) // self.cols
+            if self._avail < rows:
+                print("Available slot: ", self._avail)
+                self.show_load()
+            else:
+                print("No available slots.")
+
+
+
+
 
 
 class FileGrid(GridLayout):
@@ -118,7 +199,7 @@ class FileGrid(GridLayout):
     #Widget detection
     def on_touch_up(self, touch):
 
-        if  not self.collide_point(touch.x, touch.y):
+        if not self.collide_point(touch.x, touch.y):
             print("OVERRIDE ON TOUCH UP. PLS USE SUPER.")
 
         elif touch.is_double_tap and touch.button == 'left':
@@ -242,6 +323,10 @@ class UserInput(BoxLayout):
                 sound.volume = self.ids.volume_slider.value
                 sound.play()
             else:
+                popup = Popup(title='Audio Error.',
+                        content=Label(text='Cannot play the file %s.' % path),
+                        size_hint = (0.3, 0.3))
+                popup.open()
                 print("Cannot play the file %s." % path)
 
     def edit_scot(self, filename, *args, rename = ''):
