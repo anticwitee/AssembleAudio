@@ -16,7 +16,23 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.clock import Clock
 import parse_kivy
 
+#network queue modify on_touch_up:
+    #add selection, (only selected files are sent)
+    #remove file from Queue
+#network queue modify set_info to add rows dynamically if there isn't enough
 
+
+class GridOfButtons():
+    def create_grid(self, width_list, rows_to_create):
+        #Width_list is a list of ints, relating to the intended
+        #width of each column in the grid.
+        print("Success!")
+        for row in range(rows_to_create):
+            for width_of_col in width_list:
+                grid_button = Button(text = '', valign = 'middle', size_hint_y = None,
+                    height = 50, width = width_of_col, background_color = (1,0,0,1))
+                grid_button.bind(size=grid_button.setter('text_size'))
+                self.add_widget(grid_button)
 
 class RootScreen(BoxLayout):
 
@@ -39,13 +55,21 @@ class NetworkQueue(GridLayout):
         super(NetworkQueue, self).__init__(**kwargs)
         self._avail = 1
 
+    def fetch_files(self):
+        pathnames = []
+        for i, widget in enumerate(self.children[2: len(self.children) - 2 :2]):
+            if widget.text:
+                pathnames.append(widget.text)
+        self.send_files(pathnames)
 
     def send_files(self, pathnames):
         #Should the validation be elsewhere....
         from ftplib import FTP
         from os.path import basename
 
+
         for pathname in pathnames:
+            #replace with "if file exists"
             if pathname:
                 ip = ""
                 ftp = FTP(ip)
@@ -62,7 +86,10 @@ class NetworkQueue(GridLayout):
                         print('---send_files cannot send open {}.---'.format(pathname))
 
     def display_log(self):
-        pass
+        popup = Popup(title='Network Log',
+                content=Label(text = 'Log is not implemented yet.'),
+                size_hint = (0.3, 0.3))
+        popup.open()
 
     def show_load(self):
         content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
@@ -113,7 +140,7 @@ class NetworkQueue(GridLayout):
 
 
 
-class FileGrid(GridLayout):
+class FileGrid(GridLayout, GridOfButtons):
 
     _sel_file = StringProperty('')
 
@@ -125,6 +152,14 @@ class FileGrid(GridLayout):
         self._sel_type = None
         self._sel_start = None
         self._sel_end = None
+        
+        #self.bind(minimum_height=self.setter('height'))
+
+        # #set initial widths
+        # print(len(self.children))
+        # for i, widget in enumerate(self.children[:len(self.children) - self.cols]):
+        #     print(i, widget)
+        #     widget.width = pre_defined_widths[i % 7]
 
     def set_info(self, id, title, artist, end, pathname):
         #Takes in the file data, and updates the filegrid to represent
@@ -136,16 +171,10 @@ class FileGrid(GridLayout):
         arg_list = [id, title, artist, end, basename(pathname), splitext(pathname)[1], pathname]
 
         #If < threshold available rows left, add more
-        print("Avail", self._avail)
-        print("Rows", rows)
         if (self._avail + threshold) >= rows:
             num_rows_to_add = 3
-            print("Current: {}".format(len(self.children)))
-            for i in range(num_rows_to_add):
-                print("Hello friend, new row {} added.".format(i))
-                for j in range(self.cols):
-                    self.add_widget(Button(text='', valign='middle', size_hint_y=None, height=50, background_color=(1,0,0,1)))
-            print("Post: {}".format(len(self.children)))
+            width_list = [100, 100, 100, 100, 100, 100, 100]
+            self.create_grid(width_list, num_rows_to_add)
 
         length = len(self.children)
         end = length - (self._avail * self.cols)
@@ -225,34 +254,36 @@ class FileGrid(GridLayout):
             #Single-click
             for row, widget in enumerate(reversed(self.children[::self.cols])):
                 if touch.y >= widget.y:
-                    if touch.button == 'left':
-                        #Deselect (could optimise)
+                    #Deselect (could optimise)
+                    for widget in self.children[self._sel_start: self._sel_end]:
+                        widget.background_color = (1, 1, 1, 1)
+
+                    end = len(self.children) - (row * self.cols)
+                    start = end - self.cols
+
+                    self._sel_file = self.children[start].text
+                    self._sel_type = self.children[start + 1].text
+                    self._sel_row = row
+                    self._sel_start = start
+                    self._sel_end = end
+
+                    #visual selection
+                    if self._sel_file:
                         for widget in self.children[self._sel_start: self._sel_end]:
-                            widget.background_color = (1, 1, 1, 1)
+                            widget.background_color = (0.0, 1.0, 1.0, 1.0)
 
-                        end = len(self.children) - (row * self.cols)
-                        start = end - self.cols
-
-                        self._sel_file = self.children[start].text
-                        self._sel_type = self.children[start + 1].text
-                        self._sel_row = row
-                        self._sel_start = start
-                        self._sel_end = end
-
-                        #visual selection
-                        if self._sel_file:
-                            for widget in self.children[self._sel_start: self._sel_end]:
-                                widget.background_color = (0.0, 1.0, 1.0, 1.0)
-
-                        print("Selected Row: ", self._sel_row)
-                        print("Start", start, "End", end - 1)
-                        print("File Type:", self._sel_type)
-                        print("Filename:", self._sel_file)
+                    print("Selected Row: ", self._sel_row)
+                    print("Start", start, "End", end - 1)
+                    print("File Type:", self._sel_type)
+                    print("Filename:", self._sel_file)
+                    if touch.button == 'left':
+                        return
                     elif touch.button == 'right':
                         #implement right click for something
-                        pass
-                    break
-
+                        if self._sel_file:
+                            for widget in self.children[self._sel_start: self._sel_end]:
+                                widget.text = ''
+                        return
 
 
 

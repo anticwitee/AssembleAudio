@@ -13,6 +13,10 @@
     size_hint_y: None
     height: 50
 
+<GridTitle@Label>:
+    size_hint_y: None
+    height: 30
+
 <TabText@TextInput>:
     write_tab: False
 
@@ -98,10 +102,12 @@ RootScreen:
                     ScrollView:
                         size_hint_y: None
                         size: root.width, root.height / 10 * 4
+                        bar_width: 10
+                        scroll_type: ['bars']
                         FileGrid:
                             id: file_grid
                             size_hint_y: None
-                            size: root.width, root.height / 10 * 4
+                            #size: root.width, root.height / 10 * 4
                             height: self.minimum_height
                     UserInput:
                         path_name: file_grid._sel_file
@@ -137,29 +143,29 @@ RootScreen:
 
 <NetworkQueue>:
     cols: 2
-    Label:
+    GridTitle:
         text: "Filename"
-    Label:
+    GridTitle:
         text: "Pathname"
     GridButton:
     GridButton:
-        id: path_0
     GridButton:
     GridButton:
-        id: path_1
     GridButton:
     GridButton:
-        id: path_2
     GridButton:
     GridButton:
-        id: path_3
     Button:
         text: "Send"
+        size_hint_y: None
+        height: 30
         background_color: get_color_from_hex("5779a4")
         background_normal: ""
-        on_touch_up: root.send_files((path_0.text, path_1.text, path_2.text, path_3.text))
+        on_touch_up: root.fetch_files()
     Button:
         text: "Log"
+        size_hint_y: None
+        height: 30
         background_color: get_color_from_hex("5779a4")
         background_normal: ""
         on_touch_up: root.display_log()
@@ -175,27 +181,76 @@ RootScreen:
             size: self.size[0] - (2 * pad_value_large), self.size[1] - (2 * pad_value_large)
 
     #Would want this to be more dynamic
-    Label:
+    GridTitle:
         text: "ID"
-        size_hint_y: None
-    Label:
+    GridTitle:
         text: "Title"
-        size_hint_y: None
-    Label:
+    GridTitle:
         text: "Artist"
-        size_hint_y: None
-    Label:
+    GridTitle:
         text: "End Date"
-        size_hint_y: None
-    Label:
+    GridTitle:
         text: "Filename"
-        size_hint_y: None
-    Label:
+    GridTitle:
         text: "Type"
-        size_hint_y: None
-    Label:
+    GridTitle:
         text: "Pathname"
-        size_hint_y: None
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
+    GridButton:
     GridButton:
     GridButton:
     GridButton:
