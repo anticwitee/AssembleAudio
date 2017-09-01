@@ -16,17 +16,22 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.clock import Clock
 import parse_kivy
 
-#network queue modify on_touch_up:
-    #add selection, (only selected files are sent)
-    #remove file from Queue
-#network queue modify set_info to add rows dynamically if there isn't enough
 
+#Improve selection/availability mechanic
+#Drop file
+#NetworkCommands needs to be set up properly
 
 class GridOfButtons():
+    # #set initial widths
+    # print(len(self.children))
+    # for i, widget in enumerate(self.children[:len(self.children) - self.cols]):
+    #     print(i, widget)
+    #     widget.width = pre_defined_widths[i % 7]
+
     def create_grid(self, width_list, rows_to_create):
         #Width_list is a list of ints, relating to the intended
         #width of each column in the grid.
-        print("Success!")
+
         for row in range(rows_to_create):
             for width_of_col in width_list:
                 grid_button = Button(text = '', valign = 'middle', size_hint_y = None,
@@ -34,222 +39,35 @@ class GridOfButtons():
                 grid_button.bind(size=grid_button.setter('text_size'))
                 self.add_widget(grid_button)
 
-class RootScreen(BoxLayout):
-
-    def gib_args(self, *args):
-        #filename, title, year, artist, ending, note, intro, EOM,
-        #s_date, e_date, s_hour, e_hour, b_audio, e_audio
-        print(args)
-
-class TopMenu(BoxLayout):
-    pass
-
-
-class Frequent(BoxLayout):
-    pass
-
-
-class NetworkQueue(GridLayout):
-
-    def __init__(self, **kwargs):
-        super(NetworkQueue, self).__init__(**kwargs)
-        self._avail = 1
-
-    def fetch_files(self):
-        pathnames = []
-        for i, widget in enumerate(self.children[2: len(self.children) - 2 :2]):
-            if widget.text:
-                pathnames.append(widget.text)
-        self.send_files(pathnames)
-
-    def send_files(self, pathnames):
-        #Should the validation be elsewhere....
-        from ftplib import FTP
-        from os.path import basename
-
-
-        for pathname in pathnames:
-            #replace with "if file exists"
-            if pathname:
-                ip = ""
-                ftp = FTP(ip)
-                ftp.login()
-                print("PWD:", ftp.pwd())
-                print(ftp.getwelcome())
-
-                #store files
-                for pathname in pathnames:
-                    filename = basename(pathname)
-                    try:
-                        ftp.storbinary('STOR ' + filename, open(filename, 'rb'))
-                    except IOError:
-                        print('---send_files cannot send open {}.---'.format(pathname))
-
-    def display_log(self):
-        popup = Popup(title='Network Log',
-                content=Label(text = 'Log is not implemented yet.'),
-                size_hint = (0.3, 0.3))
-        popup.open()
-
-    def show_load(self):
-        content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
-        self._popup = Popup(title="Load file", content=content,
-                            size_hint=(0.9, 0.9))
-        self._popup.open()
-
-    def load(self, path, filenames):
-        print(path, filenames)
-        self.set_info(path, filenames)
-        self.dismiss_popup()
-
-    def dismiss_popup(self):
-        self._popup.dismiss()
-
-    def set_info(self, path, filenames):
-        from os.path import basename
-
-        length = len(self.children)
-        num_rows = length // self.cols -1 #send/log
-        for filename in filenames:
-            arg_list = [basename(filename), filename]
-            if self._avail < num_rows:
-                end = length - (self._avail * self.cols)
-                start = end - self.cols
-                for i, widget in enumerate(reversed(self.children[start:end])):
-                    widget.text = arg_list[i]
-                self._avail += 1
-
-            else:
-                print("Network Queue: Full capacity.")
-
-    def on_touch_up(self, touch):
-
-        if not self.collide_point(touch.x, touch.y):
-            print("Super.....(NetworkQueue)")
-        elif touch.is_double_tap:
-            #Load, double-click
-            rows = len(self.children) // self.cols
-            if self._avail < rows:
-                print("Available slot: ", self._avail)
-                self.show_load()
-            else:
-                print("No available slots.")
-
-
-
-
-
-
-class FileGrid(GridLayout, GridOfButtons):
-
-    _sel_file = StringProperty('')
-
-    def __init__(self, **kwargs):
-        super(FileGrid, self).__init__(**kwargs)
-        self._avail = 1
-        self._sel_row = None
-        self._sel_file = ""
-        self._sel_type = None
-        self._sel_start = None
-        self._sel_end = None
-        
-        #self.bind(minimum_height=self.setter('height'))
-
-        # #set initial widths
-        # print(len(self.children))
-        # for i, widget in enumerate(self.children[:len(self.children) - self.cols]):
-        #     print(i, widget)
-        #     widget.width = pre_defined_widths[i % 7]
-
-    def set_info(self, id, title, artist, end, pathname):
-        #Takes in the file data, and updates the filegrid to represent
+    def set_info(self, data_to_write, width_list, num_rows_to_add = 3):
+        #Takes in the file data, and updates the Grid to represent
         #and indicate the files that are loaded with their metadata.
-        from os.path import dirname, basename, splitext
 
-        rows = len(self.children) // self.cols
-        threshold = 3
-        arg_list = [id, title, artist, end, basename(pathname), splitext(pathname)[1], pathname]
+        if len(data_to_write) != self.cols:
+            print("--set_info Data mismatch error.")
+        else:
+            threshold = 3
+            rows = len(self.children) // self.cols
+            #If < threshold available rows left, add more
+            if (self._avail + threshold) >= rows:
+                self.create_grid(width_list, num_rows_to_add)
 
-        #If < threshold available rows left, add more
-        if (self._avail + threshold) >= rows:
-            num_rows_to_add = 3
-            width_list = [100, 100, 100, 100, 100, 100, 100]
-            self.create_grid(width_list, num_rows_to_add)
-
-        length = len(self.children)
-        end = length - (self._avail * self.cols)
-        start = end - self.cols
-        for i, widget in enumerate(reversed(self.children[start:end])):
-            widget.text = arg_list[i]
-        self._avail += 1
+            length = len(self.children)
+            end = length - (self._avail * self.cols)
+            start = end - self.cols
+            for i, widget in enumerate(reversed(self.children[start:end])):
+                widget.text = data_to_write[i]
+            self._avail += 1
 
 
-    #FileChooserMethods
-    def show_load(self):
-        content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
-        self._popup = Popup(title="Load file", content=content,
-                            size_hint=(0.9, 0.9))
-        self._popup.open()
-
-    def load(self, path, filenames):
-        print("Path: ", path)
-        print("Filenames: ", filenames)
-
-
-        for filename in filenames:
-            #Should check file type first.
-            try:
-                with open(filename, 'rb') as f:
-                    f.seek(72)
-                    try:
-                        title = f.read(43).decode("ascii")
-                    except UnicodeDecodeError:
-                        title = "None"
-
-                    try:
-                        id_num = f.read(4).decode("ascii")
-                    except UnicodeDecodeError:
-                        id_num = "None"
-
-                    f.seek(139)
-                    try:
-                        end_date = f.read(6).decode("ascii")
-                    except UnicodeDecodeError:
-                        end_date = "None"
-
-                    f.seek(335)
-                    try:
-                        artist = f.read(34).decode("ascii")
-                    except UnicodeDecodeError:
-                        artist = "None"
-
-                self.set_info(id_num, title, artist, end_date, filename)
-
-
-            except IOError:
-                print("Cannot find file {}".format(filename))
-            self.dismiss_popup()
-
-    def dismiss_popup(self):
-        self._popup.dismiss()
-
-
-
-
-    #Widget detection
-    def on_touch_up(self, touch):
-
+    def on_touch_up(self, touch, out_of_bounds = ""):
         if not self.collide_point(touch.x, touch.y):
-            print("OVERRIDE ON TOUCH UP. PLS USE SUPER.")
+            print("--- %s Should use the super function." % out_of_bounds)
 
         elif touch.is_double_tap and touch.button == 'left':
-            #Load, double-click
-            rows = len(self.children) // self.cols
-            if self._avail < rows:
-                print("Available slot: ", self._avail)
-                self.show_load()
-            else:
-                print("No available slots.")
+            print("Available slot: ", self._avail)
+            self.show_load()
+
         else:
             #Single-click
             for row, widget in enumerate(reversed(self.children[::self.cols])):
@@ -284,6 +102,184 @@ class FileGrid(GridLayout, GridOfButtons):
                             for widget in self.children[self._sel_start: self._sel_end]:
                                 widget.text = ''
                         return
+
+
+class RootScreen(BoxLayout):
+    pass
+
+class TopMenu(BoxLayout):
+    pass
+
+
+class Frequent(BoxLayout):
+    pass
+
+
+class NetworkQueueHeader(BoxLayout):
+    pass
+
+class NetworkQueue(GridLayout, GridOfButtons):
+
+    def __init__(self, **kwargs):
+        super(NetworkQueue, self).__init__(**kwargs)
+        self._avail = 0
+        self._sel_row = None
+        self._sel_file = ""
+        self._sel_type = None
+        self._sel_start = None
+        self._sel_end = None
+
+        self.create_grid([100, 100], 10)
+
+    def set_info(self, data_to_write):
+        GridOfButtons.set_info(self, data_to_write, [100, 100])
+
+    def on_touch_up(self, touch):
+        GridOfButtons.on_touch_up(self, touch, out_of_bounds = "NetworkQueue---")
+
+
+    #FileChooserMethods
+    def show_load(self):
+        content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
+        self._popup = Popup(title="Load file", content=content,
+                            size_hint=(0.9, 0.9))
+        self._popup.open()
+
+    def load(self, path, filenames):
+        from os.path import basename
+
+        print(path, filenames)
+        for filename in filenames:
+            data_to_write = [basename(filename), filename]
+            self.set_info(data_to_write)
+
+        self.dismiss_popup()
+
+    def dismiss_popup(self):
+        self._popup.dismiss()
+
+
+class NetworkCommands(BoxLayout):
+
+        def fetch_files(self):
+            pathnames = []
+            #needs changing
+            for i, widget in enumerate(self.children[::2]):
+                if widget.text:
+                    pathnames.append(widget.text)
+            self.send_files(pathnames)
+
+        def send_files(self, pathnames):
+            #Should the validation be elsewhere....
+            from ftplib import FTP
+            from os.path import basename
+
+
+            for pathname in pathnames:
+                #replace with "if file exists"
+                if pathname:
+                    ip = ""
+                    #Need to implement a way to set IP
+                    if ip:
+                        ftp = FTP(ip)
+                        ftp.login()
+                        print("PWD:", ftp.pwd())
+                        print(ftp.getwelcome())
+
+                        #store files
+                        for pathname in pathnames:
+                            filename = basename(pathname)
+                            try:
+                                ftp.storbinary('STOR ' + filename, open(filename, 'rb'))
+                            except IOError:
+                                print('---send_files cannot send open {}.---'.format(pathname))
+
+        def display_log(self):
+            #this is getting triggered multiple times for some reason
+            popup = Popup(title='Network Log',
+                    content=Label(text = 'Log is not implemented yet.'),
+                    size_hint = (0.3, 0.3))
+            popup.open()
+
+
+class EditingGridHeader(BoxLayout):
+    pass
+
+
+class EditingGrid(GridLayout, GridOfButtons):
+
+    _sel_file = StringProperty('')
+
+    def __init__(self, **kwargs):
+        super(EditingGrid, self).__init__(**kwargs)
+        self._avail = 0
+        self._sel_row = None
+        self._sel_file = ""
+        self._sel_type = None
+        self._sel_start = None
+        self._sel_end = None
+
+        self.create_grid([100, 100, 100, 100, 100, 100, 100], 10)
+        #self.bind(minimum_height=self.setter('height'))
+
+
+    def set_info(self, data_to_write):
+        GridOfButtons.set_info(self, data_to_write, [100, 100, 100, 100, 100, 100, 100])
+
+
+    def on_touch_up(self, touch):
+        GridOfButtons.on_touch_up(self, touch, out_of_bounds = "EditingGrid---")
+
+
+    #FileChooserMethods
+    def show_load(self):
+        content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
+        self._popup = Popup(title="Load file", content=content,
+                            size_hint=(0.9, 0.9))
+        self._popup.open()
+
+    def load(self, path, filenames):
+        from os.path import basename, splitext
+
+        print("Path: ", path)
+        print("Filenames: ", filenames)
+        for filename in filenames:
+            #Should check file type first.
+            try:
+                with open(filename, 'rb') as f:
+                    f.seek(72)
+                    try:
+                        title = f.read(43).decode("ascii")
+                    except UnicodeDecodeError:
+                        title = "None"
+
+                    try:
+                        id_num = f.read(4).decode("ascii")
+                    except UnicodeDecodeError:
+                        id_num = "None"
+
+                    f.seek(139)
+                    try:
+                        end_date = f.read(6).decode("ascii")
+                    except UnicodeDecodeError:
+                        end_date = "None"
+
+                    f.seek(335)
+                    try:
+                        artist = f.read(34).decode("ascii")
+                    except UnicodeDecodeError:
+                        artist = "None"
+
+                data_to_write = [id_num, title, artist, end_date, basename(filename), splitext(filename)[1], filename]
+                self.set_info(data_to_write)
+
+
+            except IOError:
+                print("Cannot find file {}".format(filename))
+            self.dismiss_popup()
+
+    def dismiss_popup(self):
+        self._popup.dismiss()
 
 
 

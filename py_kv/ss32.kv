@@ -3,8 +3,10 @@
 #:set pad_value_small 5
 
 
+#Padding fix required for EditingGrid
 
-#PADDING DOESNT DECREASE WIDGET SIZE (HITBOX)
+#Padding doesn't decrease widget size (Bounding Box)
+#collide_point + scrollview ---> ???
 
 <GridButton@Button>:
     text_size: self.width - pad_value_large, self.height - pad_value_large
@@ -96,19 +98,36 @@ RootScreen:
                         background_color: get_color_from_hex("5779a4")
                         background_normal: ""
                         text: "Files/Directories"
-                    NetworkQueue:
-                BoxLayout:
-                    orientation: "vertical"
-                    ScrollView:
-                        size_hint_y: None
-                        size: root.width, root.height / 10 * 4
-                        bar_width: 10
-                        scroll_type: ['bars']
-                        FileGrid:
-                            id: file_grid
+                    BoxLayout:
+                        orientation: 'vertical'
+                        NetworkQueueHeader:
+
+                        ScrollView:
                             size_hint_y: None
-                            #size: root.width, root.height / 10 * 4
-                            height: self.minimum_height
+                            size: root.width / 5, root.height / 3.1 #A bit of a mess
+                            bar_width: 10
+                            scroll_type: ['bars']
+                            NetworkQueue:
+                                cols: 2
+                                size_hint_y: None
+                                height: self.minimum_height
+                        NetworkCommands:
+
+                BoxLayout:
+                    orientation: 'vertical'
+                    BoxLayout:
+                        orientation: 'vertical'
+                        EditingGridHeader:
+
+                        ScrollView:
+                            size_hint_y: None
+                            size: root.width, root.height / 10 * 4
+                            bar_width: 10
+                            scroll_type: ['bars']
+                            EditingGrid:
+                                id: file_grid
+                                size_hint_y: None
+                                height: self.minimum_height
                     UserInput:
                         path_name: file_grid._sel_file
         Screen:
@@ -141,27 +160,20 @@ RootScreen:
 <Frequent>:
 
 
-<NetworkQueue>:
-    cols: 2
+<NetworkQueueHeader>:
     GridTitle:
         text: "Filename"
     GridTitle:
         text: "Pathname"
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
+
+<NetworkCommands>:
     Button:
         text: "Send"
         size_hint_y: None
         height: 30
         background_color: get_color_from_hex("5779a4")
         background_normal: ""
-        on_touch_up: root.fetch_files()
+        #on_touch_up: root.fetch_files()
     Button:
         text: "Log"
         size_hint_y: None
@@ -170,17 +182,15 @@ RootScreen:
         background_normal: ""
         on_touch_up: root.display_log()
 
-<FileGrid>:
-    cols: 7
-    padding: pad_value_large
+
+<EditingGridHeader>:
+    padding: [pad_value_large, pad_value_large, pad_value_large, 0]
     canvas.before:
         Color:
             rgba: get_color_from_hex("262728")
         Rectangle:
-            pos: self.pos[0] + pad_value_large, self.pos[1] + pad_value_large
-            size: self.size[0] - (2 * pad_value_large), self.size[1] - (2 * pad_value_large)
-
-    #Would want this to be more dynamic
+            pos: self.pos[0] + pad_value_large, self.pos[1]
+            size: self.size[0] - (2 * pad_value_large), self.size[1]   ##y value here could so with some work
     GridTitle:
         text: "ID"
     GridTitle:
@@ -195,91 +205,17 @@ RootScreen:
         text: "Type"
     GridTitle:
         text: "Pathname"
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
-    GridButton:
 
+
+<EditingGrid>:
+    cols: 7
+    padding: [pad_value_large, 0, pad_value_large, pad_value_large]
+    canvas.before:
+        Color:
+            rgba: get_color_from_hex("262728")
+        Rectangle:
+            pos: self.pos[0] + pad_value_large, self.pos[1] + pad_value_large
+            size: self.size[0] - (2 * pad_value_large), self.size[1] - (pad_value_large)
 
 
 <LoadDialog>:
