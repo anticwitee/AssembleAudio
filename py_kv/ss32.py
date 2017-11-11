@@ -17,16 +17,26 @@ from kivy.clock import Clock
 import parse_kivy
 
 
+
+#widget.walk(restrict=True) looks nice
+
 #Improve selection/availability mechanic
 #Drop file
 #NetworkCommands needs to be set up properly
 
-class GridOfButtons():
-    # #set initial widths
-    # print(len(self.children))
-    # for i, widget in enumerate(self.children[:len(self.children) - self.cols]):
-    #     print(i, widget)
-    #     widget.width = pre_defined_widths[i % 7]
+class GridOfButtons:
+
+    def __init__(self):
+        self._avail = 0
+        self._sel_row = None
+        self._sel_file = ""
+        self._sel_type = None
+        self._sel_start = None
+        self._sel_end = None
+
+    def button_press(self, button, touch):
+        if button.collide_point(touch.x, touch.y):
+            self.grid_touch_actions(button, touch)
 
     def create_grid(self, width_list, rows_to_create):
         #Width_list is a list of ints, relating to the intended
@@ -37,6 +47,7 @@ class GridOfButtons():
                 grid_button = Button(text = '', valign = 'middle', size_hint_y = None,
                     height = 50, width = width_of_col, background_color = (1,0,0,1))
                 grid_button.bind(size=grid_button.setter('text_size'))
+                grid_button.bind(on_touch_up=self.button_press)
                 self.add_widget(grid_button)
 
     def set_info(self, data_to_write, width_list, num_rows_to_add = 3):
@@ -59,50 +70,64 @@ class GridOfButtons():
                 widget.text = data_to_write[i]
             self._avail += 1
 
+    def grid_touch_actions(self, child, touch):
+        if child.collide_point(touch.x, touch.y):
+            if touch.is_double_tap and touch.button == 'left':
+                print("Available slot: ", self._avail)
+                self.show_load()
+            else:
+                #Single-click
+                print("Grid_touch self:", self)
+                #Deselect visually
+                for widget in self.children[self._sel_start: self._sel_end]:
+                    widget.background_color = (1, 1, 1, 1)
 
-    def on_touch_up(self, touch, out_of_bounds = ""):
-        if not self.collide_point(touch.x, touch.y):
-            print("--- %s Should use the super function." % out_of_bounds)
+                index = (len(self.children) - 1) - self.children.index(child)
+                row = index // self.cols
+                end = len(self.children) - (row * self.cols)
+                start = end - self.cols
 
-        elif touch.is_double_tap and touch.button == 'left':
-            print("Available slot: ", self._avail)
-            self.show_load()
+                self._sel_file = self.children[start].text
+                self._sel_type = self.children[start + 1].text
+                self._sel_row = row
+                self._sel_start = start
+                self._sel_end = end
 
-        else:
-            #Single-click
-            for row, widget in enumerate(reversed(self.children[::self.cols])):
-                if touch.y >= widget.y:
-                    #Deselect (could optimise)
-                    for widget in self.children[self._sel_start: self._sel_end]:
-                        widget.background_color = (1, 1, 1, 1)
-
-                    end = len(self.children) - (row * self.cols)
-                    start = end - self.cols
-
-                    self._sel_file = self.children[start].text
-                    self._sel_type = self.children[start + 1].text
-                    self._sel_row = row
-                    self._sel_start = start
-                    self._sel_end = end
-
-                    #visual selection
-                    if self._sel_file:
+                print("-" * 70)
+                print("Selected Row: ", self._sel_row)
+                print("Start", start, "End", end - 1)
+                print("File Type:", self._sel_type)
+                print("Filename:", self._sel_file)
+                print("-" * 70)
+                if self._sel_file:
+                    if touch.button == 'left':
+                        #Visual selection
                         for widget in self.children[self._sel_start: self._sel_end]:
                             widget.background_color = (0.0, 1.0, 1.0, 1.0)
 
-                    print("Selected Row: ", self._sel_row)
-                    print("Start", start, "End", end - 1)
-                    print("File Type:", self._sel_type)
-                    print("Filename:", self._sel_file)
-                    if touch.button == 'left':
-                        return
                     elif touch.button == 'right':
-                        #implement right click for something
-                        if self._sel_file:
-                            for widget in self.children[self._sel_start: self._sel_end]:
-                                widget.text = ''
-                        return
+                        #Empty/Unload a row
+                        for widget in self.children[self._sel_start: self._sel_end]:
+                            widget.text = ''
 
+
+    def on_touch_up(self, touch, out_of_bounds = ""):
+        if not self.collide_point(touch.x, touch.y):
+            print("-" * 70)
+            print("Didn't collide with:", out_of_bounds)
+            print("Touch was:", touch.x, touch.y)
+            print("Scrollview is:", self.pos, self.size)
+            print("-" * 70)
+        else:
+            print("-" * 70)
+            print("Successful Touch was:", touch.x, touch.y)
+            print("Successful Scrollview is:", self.pos, self.size)
+            print("-" * 70)
+            GridOfButtons.grid_touch_actions(self.children[0], touch)
+
+    def __str__(self):
+        length = '{} {}'.format('Grid of size:', len(self.children))
+        return '{}'.format(length)
 
 class RootScreen(BoxLayout):
     pass
@@ -110,33 +135,26 @@ class RootScreen(BoxLayout):
 class TopMenu(BoxLayout):
     pass
 
-
 class Frequent(BoxLayout):
     pass
 
-
 class NetworkQueueHeader(BoxLayout):
     pass
+
+class NetworkQueueScroll(ScrollView):
+    pass
+    # def on_touch_up(self, touch):
+    #     super().on_touch_up(touch)
+    #     GridOfButtons.on_touch_up(self, touch, out_of_bounds = "NetworkQueue---")
 
 class NetworkQueue(GridLayout, GridOfButtons):
 
     def __init__(self, **kwargs):
         super(NetworkQueue, self).__init__(**kwargs)
-        self._avail = 0
-        self._sel_row = None
-        self._sel_file = ""
-        self._sel_type = None
-        self._sel_start = None
-        self._sel_end = None
-
         self.create_grid([100, 100], 10)
 
     def set_info(self, data_to_write):
         GridOfButtons.set_info(self, data_to_write, [100, 100])
-
-    def on_touch_up(self, touch):
-        GridOfButtons.on_touch_up(self, touch, out_of_bounds = "NetworkQueue---")
-
 
     #FileChooserMethods
     def show_load(self):
@@ -158,6 +176,9 @@ class NetworkQueue(GridLayout, GridOfButtons):
     def dismiss_popup(self):
         self._popup.dismiss()
 
+    def __str__(self):
+        source = '{} {}'.format('Source:', 'Network Queue')
+        return '{}\n{}'.format(source, super().__str__())
 
 class NetworkCommands(BoxLayout):
 
@@ -205,6 +226,11 @@ class NetworkCommands(BoxLayout):
 class EditingGridHeader(BoxLayout):
     pass
 
+class EditingGridScroll(ScrollView):
+    pass
+    # def on_touch_up(self, touch):
+    #     super().on_touch_up(touch)
+    #     GridOfButtons.on_touch_up(self, touch, out_of_bounds = "EditingGrid---")
 
 class EditingGrid(GridLayout, GridOfButtons):
 
@@ -212,24 +238,12 @@ class EditingGrid(GridLayout, GridOfButtons):
 
     def __init__(self, **kwargs):
         super(EditingGrid, self).__init__(**kwargs)
-        self._avail = 0
-        self._sel_row = None
-        self._sel_file = ""
-        self._sel_type = None
-        self._sel_start = None
-        self._sel_end = None
-
         self.create_grid([100, 100, 100, 100, 100, 100, 100], 10)
         #self.bind(minimum_height=self.setter('height'))
 
 
     def set_info(self, data_to_write):
         GridOfButtons.set_info(self, data_to_write, [100, 100, 100, 100, 100, 100, 100])
-
-
-    def on_touch_up(self, touch):
-        GridOfButtons.on_touch_up(self, touch, out_of_bounds = "EditingGrid---")
-
 
     #FileChooserMethods
     def show_load(self):
@@ -282,6 +296,9 @@ class EditingGrid(GridLayout, GridOfButtons):
         self._popup.dismiss()
 
 
+    def __str__(self):
+        source = '{} {}'.format('Source:', 'Editing Grid')
+        return '{}\n{}'.format(source, super().__str__())
 
 class LoadDialog(FloatLayout):
     load = ObjectProperty(None)
@@ -402,7 +419,7 @@ class UserInput(BoxLayout):
         print("---edit_scot Edit List: ", edit)
         print("---edit_scot Rename, ", rename)
         print("---edit_scot Filename, ", filename)
-        parse_kivy.EditScott(filename, edit, new_name = rename)
+        parse_kivy.Wav_File_Handler(filename, edit, new_name = rename)
 
 
 

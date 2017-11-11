@@ -1,4 +1,4 @@
-def ConvertScott(source, dst, title_str, id_num, artist):
+def ConvertScott(source, dst, id_num = '0000', title_str = '', artist = ''):
     #Assumes WAV
 
     try:
@@ -27,6 +27,29 @@ def WriteScottFile(header, data, output_name):
     else:
         print("File {} already exists.".format(output_name))
 
+
+
+def Wav_File_Handler(file, edit, new_name = ''):
+
+    try:
+        with open(file, 'rb') as wav_file:
+            wav_file.seek(8)
+            is_wav_file = wav_file.read(4)
+            if is_wav_file == bytes('WAVE', 'ASCII'):
+                wav_file.seek(60)
+                scot = wav_file.read(4)
+                if scot == bytes('scot', 'ASCII'):
+                    print("Edit detected. Data was:", scot)
+                    #edit the file
+                    #parse_kivy.EditScott(file, edit, new_name = new_name)
+                else:
+                    print("Conversion detected. Data was:", scot)
+                    #convert the file
+                    #ConvertScott(file, file + '_new')
+            else:
+                print("Not a wav file:", is_wav_file)
+    except IOError:
+        print("--Wav_File_Handler Error--")
 
 
 def EditScott(file_name, edit, new_name = ''):

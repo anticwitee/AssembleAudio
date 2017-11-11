@@ -102,7 +102,7 @@ RootScreen:
                         orientation: 'vertical'
                         NetworkQueueHeader:
 
-                        ScrollView:
+                        NetworkQueueScroll:
                             size_hint_y: None
                             size: root.width / 5, root.height / 3.1 #A bit of a mess
                             bar_width: 10
@@ -119,7 +119,7 @@ RootScreen:
                         orientation: 'vertical'
                         EditingGridHeader:
 
-                        ScrollView:
+                        EditingGridScroll:
                             size_hint_y: None
                             size: root.width, root.height / 10 * 4
                             bar_width: 10
@@ -180,7 +180,7 @@ RootScreen:
         height: 30
         background_color: get_color_from_hex("5779a4")
         background_normal: ""
-        on_touch_up: root.display_log()
+        on_press: root.display_log()
 
 
 <EditingGridHeader>:
