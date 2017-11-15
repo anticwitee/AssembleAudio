@@ -1,61 +1,78 @@
-def ConvertScott(source, dst, id_num = '0000', title_str = '', artist = ''):
+def convertScott(source, dst, id_num = '0000', title_str = '', artist = ''):
     #Assumes WAV
 
     try:
-        header, data = ProcessWav(source, title_str, id_num, artist)
-        WriteScottFile(header, data, dst)
+        header, data = processWav(source, title_str, id_num, artist)
+        writeScottFile(header, data, dst)
     except IOError:
         print("---ConvertScott: File {0} cannot be opened.".format(source))
 
 
 
-def WriteScottFile(header, data, output_name):
+def writeScottFile(header, data, output_name):
     """Takes in a list of byte objects 'header',
         a list of byte objects 'data' and an 'output_name'
         which is the new scott file. The scott file contains
         the byte objects in header and data."""
 
     from os.path import exists
+    from os.path import splitext
 
-    if not exists(output_name):
-        with open(output_name, 'wb') as scott_file:
-            for item in header:
-                scott_file.write(item)
+    if exists(output_name):
+        basename, extension = splitext(output_name)
+        output_name = basename + '_new_scot' + extension
+        if exists(output_name):
+            print("File {} already exists.".format(output_name))
+            return
 
-            for item in data:
-                scott_file.write(item)
-    else:
-        print("File {} already exists.".format(output_name))
+    with open(output_name, 'wb') as scott_file:
+        for item in header:
+            scott_file.write(item)
+
+        for item in data:
+            scott_file.write(item)
 
 
 
-def Wav_File_Handler(file, edit, new_name = ''):
 
+def wav_File_Handler(filename, edit_list, new_name = ''):
+    #Given a file, the function will determine
+    #whether it is a SCOT WAV file or just a
+    #regular WAV file. Based on the result,
+    #it will call the appropriate function
+
+    from os.path import join, dirname
+
+    edit = False
+    conversion = False
     try:
-        with open(file, 'rb') as wav_file:
+        with open(filename, 'rb') as wav_file:
             wav_file.seek(8)
             is_wav_file = wav_file.read(4)
             if is_wav_file == bytes('WAVE', 'ASCII'):
                 wav_file.seek(60)
                 scot = wav_file.read(4)
                 if scot == bytes('scot', 'ASCII'):
-                    print("Edit detected. Data was:", scot)
-                    #edit the file
-                    #parse_kivy.EditScott(file, edit, new_name = new_name)
+                    edit = True
                 else:
-                    print("Conversion detected. Data was:", scot)
-                    #convert the file
-                    #ConvertScott(file, file + '_new')
+                    conversion = True
             else:
                 print("Not a wav file:", is_wav_file)
     except IOError:
         print("--Wav_File_Handler Error--")
 
+    if edit:
+        return editScottWav(filename, edit_list, new_name = new_name)
+    elif conversion:
+        if new_name:
+            path = join(dirname(filename), new_name)
+            convertScott(filename, path)
+        else:
+            convertScott(filename, filename)
 
-def EditScott(file_name, edit, new_name = ''):
-    #For WAV files.
-    #Takes in a file name to write to, "file_name" and a list of attributes
-    #to write, called "edit".
+def editScottWav(file_name, edit, new_name = ''):
+    #Edits the scott file 'file_name', optionally re-naming
+    #the file.
     from os import rename
     from os.path import dirname, isfile, join
 
@@ -63,29 +80,30 @@ def EditScott(file_name, edit, new_name = ''):
             "note" : 369, "intro" : 403, "eom" : 152, "s_date" : 133,
             "e_date" : 139, "s_hour" : 145, "e_hour": 146}
 
-    print("EditScott: Filename: ", file_name)
     temp_is_scott = False
+    renamed = False
+    edited = False
 
     try:
         with open(file_name, 'rb+') as f:
             f.seek(60)
-            if f.read(4) == bytes("scot", "ASCII"):
-                temp_is_scott = True
+            if not f.read(4) == bytes("scot", "ASCII"):
+                print("---EditScott error, {} is not a SCOTTWAV file.---".format(file_name))
+            else:
                 for name, data in edit:
                     f.seek(addr[name])
                     if type(data) == type("str"):
                         f.write(bytes(data, "ASCII"))
                     else:
                         #May be a more efficient way
-                        num_bytes = DigitCount(data)
+                        num_bytes = len(str(abs(data)))
                         f.write((data).to_bytes(num_bytes, byteorder='little'))
-            else:
-                print("---EditScott error, {} is not a SCOTTWAV file.---".format(file_name))
+                edited = True
 
     except IOError:
         print("---EditScott cannot open {}. ---".format(file_name))
 
-    if new_name and temp_is_scott:
+    if new_name:
         try:
             #don't want to rename while file is open.
             new_f_name = join(dirname(file_name), new_name)
@@ -93,30 +111,37 @@ def EditScott(file_name, edit, new_name = ''):
                 print("---EditScott file {} already exists, not renaming.----".format(new_f_name))
             else:
                 rename(file_name, new_f_name)
+                renamed = new_f_name
         except IOError:
             print("---EditScott Cannot rename {} to {}.---".format(file_name, new_name))
 
+    return renamed, edited
 
-def DigitCount(n):
-    #Doesn't handle negative nums
-    x = 10
-    power = 1
-    while x ** power < n:
-        power += 1
-    return power
 
-def ProcessWav(file_name, title_str, id_num, artist):
+def processWav(file_name, title_str, id_num, artist):
     """Gather necessary info from a RIFF WAV header.
 
     """
+    #> 40 constant is just the size of the FMT chunk
+    #possibly should adjust it to represent what I'm actually doing.
+    #Reading info from scott file that is converted is fuked.
+    #Due to indexes not lining up due to extra metadata...
+    #Strip?
 
-    #Could use WAVE library for simplified reading
 
+
+    import wave
     header = []
     data = []
 
+    #Doesn't work inside ctx manager due to wave.open
+    f = wave.open(file_name, 'rb')
+    num_c = f.getnchannels()
+    samp_width = f.getsampwidth()
+    samp_rate =  f.getframerate()
+    f.close()
+
     with open(file_name, 'rb') as wav_file:
-        #riff
         riff = wav_file.read(4)
         header.append(bytes(riff))
 
@@ -125,48 +150,36 @@ def ProcessWav(file_name, title_str, id_num, artist):
         f_size = int.from_bytes(src_f_size, byteorder='little') + 476
         header.append((f_size - 8).to_bytes(4, byteorder='little'))
 
-        #WAVE, fmt
-        header.append(wav_file.read(8))
+        #Loop until you meet 'data' (FMT section)
+        bytes_4 = wav_file.read(4)
+        data_byte = bytes('data', 'ASCII')
+        #sanity check
+        iterations = 0
+        while bytes_4 != data_byte:
+            if iterations < 1000:
+                iterations += 1
+                header.append(bytes_4)
+                bytes_4 = wav_file.read(4)
+            else:
+                print("Wow.")
+                break
 
-        #Some constant
-        header.append(bytes(b'(\x00\x00\x00'))
+        #Sound data (Block 3)
+        b_data_size = wav_file.read(4)
+        i_data_size = int.from_bytes(b_data_size, byteorder='little')
 
-        #skips over SubChunk1size (for now)
-        wav_file.seek(20)
+        ExpandHeader(header, num_c, samp_width, samp_rate, i_data_size, f_size, title_str, id_num, artist)
 
-        #NumChannels, Sample rate, bitrate, blocksize, format
-        rates_misc = wav_file.read(16)
-        header.append(bytes(rates_misc))
-
-        #Above is all WAV RIFF Data
-
-        #Data
-        wav_file.seek(40)
-        b_size_of_file = wav_file.read(4)
-        i_size_of_file = int.from_bytes(b_size_of_file, byteorder='little')
         sound_data = wav_file.read()
-
-        if len(sound_data) == i_size_of_file:
-            data.append(sound_data)
-        else:
-            print("There appears to be a sizing issue.")
-
-
-    ExpandHeader(header, file_name, f_size, title_str, id_num, artist)
+        if not len(sound_data) == i_data_size:
+            print("Footer information detected.")
+        data.append(sound_data)
 
     return (header, data)
 
-def ExpandHeader(header, file_name, f_size, title_str, id_num, artist):
+def ExpandHeader(header, num_c, samp_width, samp_rate, data_size, f_size, title_str, id_num, artist):
     #Takes the 'header' info obtained from a source WAV file
     #and expands it to include neccessary info in a SCOTT header.
-
-    import wave
-
-    f = wave.open(file_name, "rb")
-    num_c = f.getnchannels()
-    samp_width = f.getsampwidth()
-    samp_rate =  f.getframerate()
-    f.close()
 
     padd_1 = bytes([0])
     padd_4 = bytes([0,0,0,0])
@@ -175,14 +188,8 @@ def ExpandHeader(header, file_name, f_size, title_str, id_num, artist):
     scott_sep = bytes(scott_sep)
     header.append(scott_sep)
 
-
-
-
-
     #Scott Headers
-
     #"Scot" and the 424 constant
-
     scot = bytes("scot", "ASCII")
     const_424 = bytes([168, 1, 0, 0])
 
@@ -193,10 +200,6 @@ def ExpandHeader(header, file_name, f_size, title_str, id_num, artist):
     #43 bytes
     title = bytes(title_str, "ASCII")
     title_padding = bytes(" " * (43 - len(title)), "ASCII")
-
-
-
-
 
 
 
@@ -311,14 +314,14 @@ def ExpandHeader(header, file_name, f_size, title_str, id_num, artist):
 
     #NumSamples = NumBytes / (NumChannels * BitsPerSample / 8)
     #Doesn't quite work with mono
-    num_samples = (f_size - 512) // (num_c * samp_width)
+    num_samples = (data_size) // (num_c * samp_width)
     b_num_samples = (num_samples).to_bytes(4, byteorder='little')
 
     #data
     data = bytes("data", "ASCII")
 
-    #filelength - 512
-    size_512 = (f_size - 512).to_bytes(4, byteorder='little')
+    #Length of Data
+    b_data_size = (data_size).to_bytes(4, byteorder='little')
 
 
     header.extend([scot, const_424, scratchpad, title, title_padding,
@@ -328,7 +331,7 @@ def ExpandHeader(header, file_name, f_size, title_str, id_num, artist):
                   postcat, opt_params_2, artist_etc, intro_yr, align_3,
                   hour_rec, date_rec, pitch, playlevel, lenvalid,
                   full_f_size, newplaylev, opt_params_3, fact, const_4,
-                  b_num_samples, data, size_512])
+                  b_num_samples, data, b_data_size])
 
 
 def info(file_name):
@@ -338,6 +341,7 @@ def info(file_name):
             header_stop = 512
             pointer = 4
             total_read = 0
+            print("Filename:", file_name)
             while total_read < header_stop:
                 print(wav_file.read(pointer))
                 print("-----------------------ADDR: ", str(total_read) + "---", end = '')
@@ -351,9 +355,11 @@ def info(file_name):
 def getWavInfo(filename, format_hex = False):
     #Prints out the header in the format
     # Name: Data
+    #Tuple is: Name, Size, True/False for Int
+    print("Filename:", filename)
 
     header_data = (['RIFF', 4, False], ['File length - 8', 4, True],
-            ['WAVE', 4, False], ['fmt', 4, False], ['40??', 4, True],
+            ['WAVE', 4, False], ['fmt', 4, False], ['FMT chunk size/40??', 4, True],
             ['Format category', 2, True], ['Number of channels', 2, True],
             ['Sampling Rate', 4, True], ['Avg bytes/sec', 4, True],
             ['Data block size', 2, True], ['Format', 2, True],
@@ -408,7 +414,7 @@ def getWavInfo(filename, format_hex = False):
     except IOError:
         print("---getWavInfo couldn't open file {}---".format(filename))
 
-def SimpleReWrite(source, dst):
+def simpleReWrite(source, dst):
 
     source = open(source, 'rb')
     dst = open(dst, 'wb')
@@ -418,3 +424,11 @@ def SimpleReWrite(source, dst):
 
     source.close()
     dst.close()
+
+#info("G:\Other Documents\Personal Programming\Scott\OG - Copy\Copy of a copy\\fresh\")
+info("G:\Other Documents\Personal Programming\Scott\OG - Copy\Copy of a copy\\fresh\sourcewav.wav")
+#getWavInfo("G:\Other Documents\Personal Programming\Scott\OG - Copy\Copy of a copy\\fresh\TR_CE_04 Reaching Roth FINAL V01_new_scot.wav")
+#getWavInfo("G:\Other Documents\Personal Programming\Scott\OG - Copy\Copy of a copy\\fresh\piano2_new_scot.wav")
+#info("G:\Other Documents\Personal Programming\Scott\OG - Copy\Copy of a copy\\fresh\9 - Grzegorz Mazur - Time Is Running Out.wav")
+#info("G:\Other Documents\Personal Programming\Scott\OG - Copy\Copy of a copy\\fresh\4 - Piotr Musial - These Cold Days.wav")
+#info("G:\Other Documents\Personal Programming\Scott\OG - Copy\Copy of a copy\\fresh\\3 - Piotr Musial - When The Night Comes.wav")

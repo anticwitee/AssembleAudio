@@ -20,6 +20,14 @@ import parse_kivy
 
 #widget.walk(restrict=True) looks nice
 
+#Multi-select?
+#TextInput truncation
+#Adjustable columns + Sortable
+#Clear grid button
+#Edit VS Convert scott
+#Error popups
+#Log Files
+#Network IP config
 #Improve selection/availability mechanic
 #Drop file
 #NetworkCommands needs to be set up properly
@@ -49,6 +57,32 @@ class GridOfButtons:
                 grid_button.bind(size=grid_button.setter('text_size'))
                 grid_button.bind(on_touch_up=self.button_press)
                 self.add_widget(grid_button)
+        self._avail += rows_to_create
+
+
+    def iterate_row(self, start = 0, match = ''):
+        for i, widget in enumerate(reversed(self.children[start::self.cols])):
+            if widget.text == match:
+                return i
+
+    def get_row_index(self, pathname):
+        return self.iterate_row(match = pathname)
+
+    def find_next_row(self):
+        return self.iterate_row()
+
+    def clear_grid(self):
+        for widget in self.children:
+            widget.text = ''
+
+    def edit_row(self, index, data_to_write):
+        if len(data_to_write) != self.cols:
+            print("--set_info Data mismatch error.")
+        else:
+            end = len(self.children) - (index * self.cols)
+            start = end - self.cols
+            for i, widget in enumerate(reversed(self.children[start:end])):
+                widget.text = data_to_write[i]
 
     def set_info(self, data_to_write, width_list, num_rows_to_add = 3):
         #Takes in the file data, and updates the Grid to represent
@@ -58,26 +92,24 @@ class GridOfButtons:
             print("--set_info Data mismatch error.")
         else:
             threshold = 3
-            rows = len(self.children) // self.cols
             #If < threshold available rows left, add more
-            if (self._avail + threshold) >= rows:
+            if self._avail < threshold:
                 self.create_grid(width_list, num_rows_to_add)
 
             length = len(self.children)
-            end = length - (self._avail * self.cols)
+            next_row = self.find_next_row()
+            end = length - (next_row * self.cols)
             start = end - self.cols
             for i, widget in enumerate(reversed(self.children[start:end])):
                 widget.text = data_to_write[i]
-            self._avail += 1
+            self._avail -= 1
 
     def grid_touch_actions(self, child, touch):
         if child.collide_point(touch.x, touch.y):
             if touch.is_double_tap and touch.button == 'left':
-                print("Available slot: ", self._avail)
                 self.show_load()
             else:
                 #Single-click
-                print("Grid_touch self:", self)
                 #Deselect visually
                 for widget in self.children[self._sel_start: self._sel_end]:
                     widget.background_color = (1, 1, 1, 1)
@@ -93,12 +125,13 @@ class GridOfButtons:
                 self._sel_start = start
                 self._sel_end = end
 
-                print("-" * 70)
-                print("Selected Row: ", self._sel_row)
-                print("Start", start, "End", end - 1)
-                print("File Type:", self._sel_type)
-                print("Filename:", self._sel_file)
-                print("-" * 70)
+                # print("-" * 70)
+                # print("Selected Row: ", self._sel_row)
+                # print("Start", start, "End", end - 1)
+                # print("File Type:", self._sel_type)
+                # print("Filename:", self._sel_file)
+                # print("-" * 70)
+
                 if self._sel_file:
                     if touch.button == 'left':
                         #Visual selection
@@ -111,18 +144,20 @@ class GridOfButtons:
                             widget.text = ''
 
 
-    def on_touch_up(self, touch, out_of_bounds = ""):
+    def on_touch_up(self, touch, out_of_bounds = "", verbose = False):
         if not self.collide_point(touch.x, touch.y):
-            print("-" * 70)
-            print("Didn't collide with:", out_of_bounds)
-            print("Touch was:", touch.x, touch.y)
-            print("Scrollview is:", self.pos, self.size)
-            print("-" * 70)
+            if verbose:
+                print("-" * 70)
+                print("Didn't collide with:", out_of_bounds)
+                print("Touch was:", touch.x, touch.y)
+                print("Scrollview is:", self.pos, self.size)
+                print("-" * 70)
         else:
-            print("-" * 70)
-            print("Successful Touch was:", touch.x, touch.y)
-            print("Successful Scrollview is:", self.pos, self.size)
-            print("-" * 70)
+            if verbose:
+                print("-" * 70)
+                print("Successful Touch was:", touch.x, touch.y)
+                print("Successful Scrollview is:", self.pos, self.size)
+                print("-" * 70)
             GridOfButtons.grid_touch_actions(self.children[0], touch)
 
     def __str__(self):
@@ -239,8 +274,6 @@ class EditingGrid(GridLayout, GridOfButtons):
     def __init__(self, **kwargs):
         super(EditingGrid, self).__init__(**kwargs)
         self.create_grid([100, 100, 100, 100, 100, 100, 100], 10)
-        #self.bind(minimum_height=self.setter('height'))
-
 
     def set_info(self, data_to_write):
         GridOfButtons.set_info(self, data_to_write, [100, 100, 100, 100, 100, 100, 100])
@@ -252,45 +285,49 @@ class EditingGrid(GridLayout, GridOfButtons):
                             size_hint=(0.9, 0.9))
         self._popup.open()
 
-    def load(self, path, filenames):
+    def info_from_file(self, filename):
         from os.path import basename, splitext
+        try:
+            with open(filename, 'rb') as f:
+                f.seek(72)
+                try:
+                    title = f.read(43).decode("ascii")
+                except UnicodeDecodeError:
+                    title = "None"
 
+                try:
+                    id_num = f.read(4).decode("ascii")
+                except UnicodeDecodeError:
+                    id_num = "None"
+
+                f.seek(139)
+                try:
+                    end_date = f.read(6).decode("ascii")
+                except UnicodeDecodeError:
+                    end_date = "None"
+
+                f.seek(335)
+                try:
+                    artist = f.read(34).decode("ascii")
+                except UnicodeDecodeError:
+                    artist = "None"
+            data_to_write = [id_num, title, artist, end_date, basename(filename), splitext(filename)[1], filename]
+            return data_to_write
+
+        except IOError:
+            print("--info_from_file-- Cannot find file {}".format(filename))
+
+    def load(self, path, filenames):
+        #Should check file type first.
         print("Path: ", path)
         print("Filenames: ", filenames)
+
         for filename in filenames:
-            #Should check file type first.
-            try:
-                with open(filename, 'rb') as f:
-                    f.seek(72)
-                    try:
-                        title = f.read(43).decode("ascii")
-                    except UnicodeDecodeError:
-                        title = "None"
+            data = self.info_from_file(filename)
+            if data:
+                self.set_info(data)
+        self.dismiss_popup()
 
-                    try:
-                        id_num = f.read(4).decode("ascii")
-                    except UnicodeDecodeError:
-                        id_num = "None"
-
-                    f.seek(139)
-                    try:
-                        end_date = f.read(6).decode("ascii")
-                    except UnicodeDecodeError:
-                        end_date = "None"
-
-                    f.seek(335)
-                    try:
-                        artist = f.read(34).decode("ascii")
-                    except UnicodeDecodeError:
-                        artist = "None"
-
-                data_to_write = [id_num, title, artist, end_date, basename(filename), splitext(filename)[1], filename]
-                self.set_info(data_to_write)
-
-
-            except IOError:
-                print("Cannot find file {}".format(filename))
-            self.dismiss_popup()
 
     def dismiss_popup(self):
         self._popup.dismiss()
@@ -300,6 +337,7 @@ class EditingGrid(GridLayout, GridOfButtons):
         source = '{} {}'.format('Source:', 'Editing Grid')
         return '{}\n{}'.format(source, super().__str__())
 
+
 class LoadDialog(FloatLayout):
     load = ObjectProperty(None)
     cancel = ObjectProperty(None)
@@ -308,6 +346,7 @@ class LoadDialog(FloatLayout):
 
 class UserInput(BoxLayout):
     path_name = StringProperty('')
+    editing_grid = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super(UserInput, self).__init__(**kwargs)
@@ -347,7 +386,6 @@ class UserInput(BoxLayout):
 
     def play(self, path):
         from kivy.core.audio import SoundLoader
-
         #Could be more elegant with regard to
         #natural stopping/self._sound_clock_clean
         if self._sound and self._sound.source == path:
@@ -396,7 +434,7 @@ class UserInput(BoxLayout):
                  ("eom", "int"), ("s_date", "str"), ("e_date", "str"),
                  ("s_hour", "str"), ("e_hour", "str")]
         edit = []
-        print(args)
+        # print(args)
 
         for i in range(len(args)):
             if len(args[i]) == valid_len[i]:
@@ -416,11 +454,23 @@ class UserInput(BoxLayout):
             elif args[i]:
                 print("---edit_scot Arg {} is a rogue, data: {}---".format(i, args[i]))
 
-        print("---edit_scot Edit List: ", edit)
-        print("---edit_scot Rename, ", rename)
-        print("---edit_scot Filename, ", filename)
-        parse_kivy.Wav_File_Handler(filename, edit, new_name = rename)
+        # print("---edit_scot Edit List: ", edit)
+        # print("---edit_scot Rename, ", rename)
+        # print("---edit_scot Filename, ", filename)
 
+        ret_values = parse_kivy.wav_File_Handler(filename, edit, new_name = rename)
+        #Update the EditingGrid to display accurate info
+        if ret_values:
+            renamed, edited = ret_values
+            if renamed or edited:
+                if renamed and edited:
+                    data = EditingGrid.info_from_file(self, renamed)
+                else:
+                    data = EditingGrid.info_from_file(self, filename)
+
+                index = GridOfButtons.get_row_index(self.editing_grid, filename)
+                if data and (index != None):
+                    GridOfButtons.edit_row(self.editing_grid, index, data)
 
 
 class AScreen(Screen):
