@@ -1,0 +1,77 @@
+[
+    {
+        "type": "title",
+        "title": "SS32 Configuration"
+    },
+
+    {
+        "type": "numeric",
+        "title": "Recursion Depth",
+        "desc": "Recursion depth for drag-and-drop.",
+        "section": "internals",
+        "key": "recursion_depth"
+    },
+
+    {
+        "type": "string",
+        "title": "Primary Deep",
+        "desc": "Changes the primary deep colour.",
+        "section": "colours",
+        "key": "primary_deep"
+    },
+    {
+        "type": "string",
+        "title": "Primary Medium",
+        "desc": "Changes the primary medium colour.",
+        "section": "colours",
+        "key": "primary_medium"
+    },
+
+    {
+        "type": "string",
+        "title": "Primary light",
+        "desc": "Changes the primary light colour.",
+        "section": "colours",
+        "key": "primary_light"
+    },
+
+    {
+        "type": "string",
+        "title": "Primary Neutral",
+        "desc": "Changes the primary neutral colour.",
+        "section": "colours",
+        "key": "primary_neutral"
+    },
+
+    {
+        "type": "string",
+        "title": "Primary Dark",
+        "desc": "Changes the primary Dark colour.",
+        "section": "colours",
+        "key": "primary_dark"
+    },
+
+    {
+        "type": "string",
+        "title": "Auxillary Dark",
+        "desc": "Changes the auxillary dark colour.",
+        "section": "colours",
+        "key": "aux_dark"
+    },
+
+    {
+        "type": "string",
+        "title": "Auxillary Neutral",
+        "desc": "Changes the auxillary neutral colour.",
+        "section": "colours",
+        "key": "aux_neutral"
+    },
+
+    {
+        "type": "string",
+        "title": "Auxillary Deep",
+        "desc": "Changes the auxillary deep colour.",
+        "section": "colours",
+        "key": "aux_deep"
+    }
+]

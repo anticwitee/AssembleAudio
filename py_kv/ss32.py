@@ -16,6 +16,7 @@ from kivy.properties import NumericProperty
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.behaviors.compoundselection import CompoundSelectionBehavior
 from kivy.uix.behaviors import FocusBehavior
+from kivy.uix.settings import SettingsWithSidebar
 from kivy.clock import Clock
 import parse_kivy
 
@@ -583,7 +584,20 @@ class Config(Screen):
 
 class ss32App(App):
     def build(self):
+        self.settings_cls = SettingsWithSidebar
+        self.use_kivy_settings = False
         return
+
+    def build_config(self, config):
+
+
+    def build_settings(self, settings):
+
+
+    def on_config_change(self, config, section, key, value):
+        print(config, section, key, value)
+
+
 
 if __name__ == '__main__':
     ss32App().run()
