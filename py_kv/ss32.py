@@ -69,22 +69,66 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
     def clear_grid(self):
         for widget in self.children:
             widget.text = ''
+        self._avail = len(self.children) // self.cols
+
+
+    def get_last_row_range_simple(self):
+        #Assumes 0-1 rows have been removed
+        total_rows = len(self.children) // self.cols
+        last_row_index = total_rows - self._avail
+        end = len(self.children) - (last_row_index * self.cols)
+        start = end - self.cols
+        return (start, end)
+
+
+    def get_last_row_range_full(self):
+        #Index starts from the bottom right in this method.
+        last_row_index = None
+        for i, widget in enumerate(self.children[::self.cols]):
+            if widget.text != '':
+                last_row_index = i
+                break
+
+        if last_row_index != None:
+            start = last_row_index * self.cols
+            end = start + self.cols
+            return (start, end, last_row_index)
+        return (False, False, False)
+
+
+    def remove_row(self, start, end, swap = False):
+        data_to_write = []
+        for widget in reversed(self.children[start:end]):
+            data_to_write.append(widget.text)
+            widget.text = ''
+        if not swap:
+            self._avail += 1
+        return data_to_write
+
+
+    def auto_reshuffle(self):
+        start, end = self.get_last_row_range_simple()
+        data_to_write = self.remove_row(start, end, swap = True)
+        next_avail = self.find_next_row()
+        self.edit_row(next_avail, data_to_write)
+
 
     def edit_row(self, index, data_to_write):
         if len(data_to_write) != self.cols:
-            print("--set_info Data mismatch error.")
+            print("--Edit Row:  Data mismatch error.")
         else:
             end = len(self.children) - (index * self.cols)
             start = end - self.cols
             for i, widget in enumerate(reversed(self.children[start:end])):
                 widget.text = data_to_write[i]
 
+
     def set_info(self, data_to_write, x_hint_list, num_rows_to_add = 3):
         #Takes in the file data, and updates the Grid to represent
         #and indicate the files that are loaded with their metadata.
 
         if len(data_to_write) != self.cols:
-            print("--set_info Data mismatch error.")
+            print("--Set info:  Data mismatch error.")
         else:
             threshold = 3
             #If < threshold available rows left, add more
@@ -121,6 +165,7 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
                 self._sel_start = start
                 self._sel_end = end
 
+                #Checks for empty rows
                 if self._sel_file:
                     if touch.button == 'left':
                         #Visual selection
@@ -129,9 +174,8 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
                             widget.color = (0.86, 0.86, 0.86, 1)
 
                     elif touch.button == 'right':
-                        #Empty/Unload a row
-                        for widget in self.children[self._sel_start: self._sel_end]:
-                            widget.text = ''
+                        self.remove_row(self._sel_start, self._sel_end)
+                        #self.auto_reshuffle()
 
 
     def __str__(self):
@@ -294,8 +338,6 @@ class EditingGrid(GridLayout, GridOfButtons):
         return file_list
 
 
-
-
     def set_info(self, data_to_write):
         GridOfButtons.set_info(self, data_to_write, EditingGrid.x_hint_list)
 
@@ -365,6 +407,22 @@ class EditingGridCommands(BoxLayout):
 
     def clear_grid(self):
         GridOfButtons.clear_grid(self.editing_grid)
+
+    def reshuffle(self):
+        #Index from row_range_full is from bottom right
+        while True:
+            start, end, last_row_index = self.editing_grid.get_last_row_range_full()
+            if not start:
+                #Grid is empty
+                break
+            elif last_row_index == self.editing_grid._avail:
+                #Grid has no empty spaces
+                break
+            else:
+                data_to_write = self.editing_grid.remove_row(start, end, swap = True)
+                index = self.editing_grid.find_next_row()
+                self.editing_grid.edit_row(index, data_to_write)
+
 
 class LoadDialog(FloatLayout):
     load = ObjectProperty(None)
