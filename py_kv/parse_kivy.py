@@ -150,23 +150,49 @@ def processWav(file_name, title_str, id_num, artist):
         f_size = int.from_bytes(src_f_size, byteorder='little') + 476
         header.append((f_size - 8).to_bytes(4, byteorder='little'))
 
-        #Loop until you meet 'data' (FMT section)
+        wave_header = wav_file.read(4)
+        header.append(wave_header)
+
+        fmt_byte = bytes('fmt ', 'ASCII')
+
+        #Loop until you meet 'fmt'
         bytes_4 = wav_file.read(4)
-        data_byte = bytes('data', 'ASCII')
+        while bytes_4 != fmt_byte:
+            bytes_4 = wav_file.read(4)
+
+        header.append(bytes_4)
+
+        #scot_sep could fluctuate to account for some extra params
+        src_fmt_size = wav_file.read(4)
+        fmt_size = int.from_bytes(src_fmt_size, byteorder='little')
+
+        #FMT PCM size
+        header.append((16).to_bytes(4, byteorder='little'))
+
+        # counter = fmt_size
+        # amount = counter // 4
+        # while counter > 0:
+        #     header.append(wav_file.read(4))
+        #     counter -= amount
+
+        #Standard PCM, might try to account for small amounts of extra-params
+        header.append(wav_file.read(16))
+
         #sanity check
         iterations = 0
+        bytes_4 = wav_file.read(4)
+        data_byte = bytes('data', 'ASCII')
         while bytes_4 != data_byte:
             if iterations < 1000:
                 iterations += 1
-                header.append(bytes_4)
                 bytes_4 = wav_file.read(4)
             else:
                 print("Wow.")
                 break
 
         #Sound data (Block 3)
-        b_data_size = wav_file.read(4)
-        i_data_size = int.from_bytes(b_data_size, byteorder='little')
+        src_data_size = wav_file.read(4)
+        i_data_size = int.from_bytes(src_data_size, byteorder='little')
 
         ExpandHeader(header, num_c, samp_width, samp_rate, i_data_size, f_size, title_str, id_num, artist)
 
@@ -424,11 +450,3 @@ def simpleReWrite(source, dst):
 
     source.close()
     dst.close()
-
-#info("G:\Other Documents\Personal Programming\Scott\OG - Copy\Copy of a copy\\fresh\")
-info("G:\Other Documents\Personal Programming\Scott\OG - Copy\Copy of a copy\\fresh\sourcewav.wav")
-#getWavInfo("G:\Other Documents\Personal Programming\Scott\OG - Copy\Copy of a copy\\fresh\TR_CE_04 Reaching Roth FINAL V01_new_scot.wav")
-#getWavInfo("G:\Other Documents\Personal Programming\Scott\OG - Copy\Copy of a copy\\fresh\piano2_new_scot.wav")
-#info("G:\Other Documents\Personal Programming\Scott\OG - Copy\Copy of a copy\\fresh\9 - Grzegorz Mazur - Time Is Running Out.wav")
-#info("G:\Other Documents\Personal Programming\Scott\OG - Copy\Copy of a copy\\fresh\4 - Piotr Musial - These Cold Days.wav")
-#info("G:\Other Documents\Personal Programming\Scott\OG - Copy\Copy of a copy\\fresh\\3 - Piotr Musial - When The Night Comes.wav")

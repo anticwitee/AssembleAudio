@@ -3,17 +3,31 @@
 #:set pad_value_small 5
 
 
+#Colours
+
+#:set deep_blue get_color_from_hex('0c3c60')
+#:set medium_blue get_color_from_hex('39729b')
+#:set light_blue get_color_from_hex('6ea4ca')
+#:set white_shade get_color_from_hex('f4f4f4')
+#:set cloudy get_color_from_hex('d1e0eb')
+
+#Grays and blacks
+
+#:set v_dark_grey get_color_from_hex('21252B')
+#:set medium_grey get_color_from_hex('3e3a47')
+#:set dark_purple get_color_from_hex('39273F')
+
+
 #Padding fix required for EditingGrid
 
 #Padding doesn't decrease widget size (Bounding Box)
-#collide_point + scrollview ---> ???
 
 <GridButton@Button>:
     text_size: self.width - pad_value_large, self.height - pad_value_large
     valign: 'middle'
     text: ''
     size_hint_y: None
-    height: 50
+    height: 30
 
 <GridTitle@Label>:
     size_hint_y: None
@@ -27,36 +41,43 @@
     width: 125
 
 <TopMenuBut@Button>:
-    #background_color: 0.96, 0.96, 0.96, 1
+    size_hint_max_x: 80
+    font_size: 13
     color: 1, 1, 1, 1
-    background_color: get_color_from_hex("031926")
+    background_color: v_dark_grey
     background_normal: ""
 
 <FreqButtons@Button>:
+    font_size: 13
+    size_hint_max_x: 90
     background_normal: ""
-    background_color: get_color_from_hex("468189")
+    background_color: medium_grey
 
 <InfoButtons@Button>:
-    background_color: get_color_from_hex("031926")
+    background_color: v_dark_grey
     background_normal: ""
     text: "Info"
 
 RootScreen:
     id: root_wid
     orientation: "vertical"
-    canvas.before:
-        Color:
-            rgba: get_color_from_hex("30424d")
-        Rectangle:
-            pos: self.pos
-            size: self.size
     TopMenu:
-        size_hint_y: None
-        size: root.width, root.height / 30
+        size_hint_y: 0.025
+        canvas.before:
+            Color:
+                rgba: v_dark_grey
+            Rectangle:
+                pos: self.pos
+                size: self.size
 
     Frequent:
-        size_hint_y: None
-        size: root.width, root.height / 20
+        size_hint_y: 0.025
+        canvas.before:
+            Color:
+                rgba: medium_grey
+            Rectangle:
+                pos: self.pos
+                size: self.size
         FreqButtons:
             text: "New"
         FreqButtons:
@@ -80,55 +101,80 @@ RootScreen:
 
     ScreenManager:
         id: screen_manager
+        size_hint_y: 0.925
         Screen:
             name: "edit"
             BoxLayout:
+                spacing: 20
+                #Main screen container
+                canvas.before:
+                    Color:
+                        rgba: dark_purple
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+                padding: 20
                 BoxLayout:
-                    padding: pad_value_small
-                    size_hint_x: None
-                    size: root.width / 5, root.height
+                    #Left hand side container
+                    size_hint_x: 0.2
                     orientation: "vertical"
                     canvas.before:
                         Color:
-                            rgba: get_color_from_hex("262728")
+                            rgba: medium_blue
                         Rectangle:
-                            pos: self.pos[0] + pad_value_small, self.pos[1] + pad_value_small
-                            size: self.size[0] - (2 * pad_value_small), self.size[1] - (2 * pad_value_small)
-                    Button:
-                        background_color: get_color_from_hex("5779a4")
-                        background_normal: ""
-                        text: "Files/Directories"
+                            pos: self.pos
+                            size: self.size
+                    # Button:
+                    #     background_color: medium_grey
+                    #     background_normal: ""
+                    #     text: "Files/Directories"
                     BoxLayout:
                         orientation: 'vertical'
                         NetworkQueueHeader:
+                            size_hint_y: 0.05
 
                         NetworkQueueScroll:
-                            size_hint_y: None
-                            size: root.width / 5, root.height / 3.1 #A bit of a mess
+                            canvas.before:
+                                Color:
+                                    rgba: v_dark_grey
+                                Rectangle:
+                                    pos: self.pos
+                                    size: self.size
+                            size_hint_y: 0.9
                             bar_width: 10
                             scroll_type: ['bars']
                             NetworkQueue:
+                                spacing: 1
                                 cols: 2
                                 size_hint_y: None
                                 height: self.minimum_height
                         NetworkCommands:
+                            size_hint_y: 0.05
 
                 BoxLayout:
+                    #Middle/Editing Container
+                    size_hint_x: 0.8
                     orientation: 'vertical'
                     BoxLayout:
+                        size_hint_y: 0.6
                         orientation: 'vertical'
                         EditingGridHeader:
+                            size_hint_y: 0.1
 
                         EditingGridScroll:
-                            size_hint_y: None
-                            size: root.width, root.height / 10 * 4
+                            size_hint_y: 0.8
                             bar_width: 10
                             scroll_type: ['bars']
                             EditingGrid:
+                                spacing: 1
                                 id: file_grid
                                 size_hint_y: None
                                 height: self.minimum_height
+                        EditingGridCommands:
+                            size_hint_y: 0.1
+                            editing_grid: file_grid
                     UserInput:
+                        size_hint_y: 0.4
                         path_name: file_grid._sel_file
                         editing_grid: file_grid
         Screen:
@@ -136,8 +182,7 @@ RootScreen:
             Config
 
     BoxLayout:
-        size_hint_y: None
-        size: root.width, root.height / 30
+        size_hint_y: 0.025
         InfoButtons:
         InfoButtons:
         InfoButtons:
@@ -162,6 +207,12 @@ RootScreen:
 
 
 <NetworkQueueHeader>:
+    canvas.before:
+        Color:
+            rgba: v_dark_grey
+        Rectangle:
+            pos: self.pos
+            size: self.size
     GridTitle:
         text: "Filename"
     GridTitle:
@@ -170,28 +221,23 @@ RootScreen:
 <NetworkCommands>:
     Button:
         text: "Send"
-        size_hint_y: None
-        height: 30
-        background_color: get_color_from_hex("5779a4")
+        background_color: deep_blue
         background_normal: ""
-        #on_touch_up: root.fetch_files()
+
     Button:
         text: "Log"
-        size_hint_y: None
-        height: 30
-        background_color: get_color_from_hex("5779a4")
+        background_color: deep_blue
         background_normal: ""
         on_press: root.display_log()
 
 
 <EditingGridHeader>:
-    padding: [pad_value_large, pad_value_large, pad_value_large, 0]
     canvas.before:
         Color:
-            rgba: get_color_from_hex("262728")
+            rgba: v_dark_grey
         Rectangle:
-            pos: self.pos[0] + pad_value_large, self.pos[1]
-            size: self.size[0] - (2 * pad_value_large), self.size[1]   ##y value here could so with some work
+            pos: self.pos
+            size: self.size
     GridTitle:
         text: "ID"
     GridTitle:
@@ -210,13 +256,31 @@ RootScreen:
 
 <EditingGrid>:
     cols: 7
-    padding: [pad_value_large, 0, pad_value_large, pad_value_large]
     canvas.before:
         Color:
-            rgba: get_color_from_hex("262728")
+            rgba: v_dark_grey
         Rectangle:
-            pos: self.pos[0] + pad_value_large, self.pos[1] + pad_value_large
-            size: self.size[0] - (2 * pad_value_large), self.size[1] - (pad_value_large)
+            pos: self.pos
+            size: self.size
+
+<EditingGridCommands>:
+    spacing: 2
+    canvas.before:
+        Color:
+            rgba: v_dark_grey
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    Button:
+        text: "Clear grid"
+        background_color: deep_blue
+        background_normal: ''
+        on_press: root.clear_grid()
+    Button:
+        background_color: deep_blue
+        background_normal: ''
+        text: "Reshuffle"
+
 
 
 <LoadDialog>:
@@ -240,106 +304,79 @@ RootScreen:
 
 <UserInput>:
     orientation: 'vertical'
-    padding: pad_value_large
     canvas.before:
         Color:
-            rgba: get_color_from_hex("262728")
+            rgba: v_dark_grey
         Rectangle:
-            pos: self.pos[0] + pad_value_large, self.pos[1] + pad_value_large
-            size: self.size[0] - (2 * pad_value_large), self.size[1] - (2 * pad_value_large)
+            pos: self.pos
+            size: self.size
     BoxLayout:
-        EditingL:
-            text: "Filename:"
-        TabText:
-            id: rename
-            hint_text: "Enter filename here."
-    BoxLayout:
-        EditingL:
-            text: "Title:"
-        TabText:
-            id: title
-            hint_text: "Enter title here."
-            input_filter: lambda text, from_undo: text[:43 - len(self.text)]
-        EditingL:
-            text: "Year:"
-        TabText:
-            id: yr
-            hint_text: "Unknown format."
-            input_filter: lambda text, from_undo: text[:4 - len(self.text)]
-    BoxLayout:
-        EditingL:
-            text: "Artist:"
-        TabText:
-            id: artist
-            hint_text: "Enter artist name here."
-            input_filter: lambda text, from_undo: text[:34 - len(self.text)]
-        EditingL:
-            text: "Ending:"
-        TabText:
-            id: ending
-            hint_text: "Unknown format."
-            input_filter: lambda text, from_undo: text[:1 - len(self.text)]
-    BoxLayout:
-        EditingL:
-            text: "Note:"
-        TabText:
-            id: note
-            hint_text: "Extras"
-            input_filter: lambda text, from_undo: text[:34 - len(self.text)]
-        EditingL:
-            text: "Intro"
-        TabText:
-            id: intro
-            hint_text: "00"
-            input_filter: lambda text, from_undo: text[:2 - len(self.text)]
-        EditingL:
-            text: "Set EOM"
-        TabText:
-            id: eom
-            hint_text: "00.0"
-            input_filter: lambda text, from_undo: text[:6 - len(self.text)]
+        size_hint_y: 0.85
+        orientation: 'vertical'
+        BoxLayout:
+            TabText:
+                id: rename
+                hint_text: "Enter filename here."
+            TabText:
+                id: note
+                hint_text: "Note"
+                input_filter: lambda text, from_undo: text[:34 - len(self.text)]
+        BoxLayout:
+            TabText:
+                id: title
+                hint_text: "Title"
+                input_filter: lambda text, from_undo: text[:43 - len(self.text)]
+            TabText:
+                id: artist
+                hint_text: "Artist"
+                input_filter: lambda text, from_undo: text[:34 - len(self.text)]
+        BoxLayout:
+            TabText:
+                id: yr
+                hint_text: "Year"
+                input_filter: lambda text, from_undo: text[:4 - len(self.text)]
+            TabText:
+                id: ending
+                hint_text: "Ending"
+                input_filter: lambda text, from_undo: text[:1 - len(self.text)]
+            TabText:
+                id: intro
+                hint_text: "Intro"
+                input_filter: lambda text, from_undo: text[:2 - len(self.text)]
+            TabText:
+                id: eom
+                hint_text: "EOM"
+                input_filter: lambda text, from_undo: text[:6 - len(self.text)]
 
-    BoxLayout:
-        EditingL:
-            text: "Start Date:"
-        TabText:
-            id: s_date
-            hint_text: "21/06/2017"
-            input_filter: lambda text, from_undo: text[:6 - len(self.text)]
+        BoxLayout:
+            TabText:
+                id: s_date
+                hint_text: "Start Date"
+                input_filter: lambda text, from_undo: text[:6 - len(self.text)]
 
-        EditingL:
-            text: "Start hour"
-        TabText:
-            id: s_hour
-            hint_text: "00:00:00"
-            input_filter: lambda text, from_undo: text[:1 - len(self.text)]
-        EditingL:
-            text: "Begin of Audio:"
-        TabText:
-            hint_text: "00:00:00.000"
+            TabText:
+                id: s_hour
+                hint_text: "Start Hour"
+                input_filter: lambda text, from_undo: text[:1 - len(self.text)]
+            TabText:
+                hint_text: "Beginning of Audio"
 
-    BoxLayout:
-        EditingL:
-            text: "End Date:"
-        TabText:
-            id: e_date
-            hint_text: "23/06/2017"
-            input_filter: lambda text, from_undo: text[:6 - len(self.text)]
-        EditingL:
-            text: "End Hour"
-        TabText:
-            id: e_hour
-            hint_text: "00:59:59"
-            input_filter: lambda text, from_undo: text[:1 - len(self.text)]
-        EditingL:
-            text: "End of Audio:"
-        TabText:
-            hint_text: "00:00:00.000"
-
+        BoxLayout:
+            TabText:
+                id: e_date
+                hint_text: "End Date"
+                input_filter: lambda text, from_undo: text[:6 - len(self.text)]
+            TabText:
+                id: e_hour
+                hint_text: "End Hour"
+                input_filter: lambda text, from_undo: text[:1 - len(self.text)]
+            TabText:
+                hint_text: "End of Audio"
     GridLayout:
+        size_hint_y: 0.15
         canvas.before:
             Color:
-                rgba: get_color_from_hex("a9adb5")
+                rgba: cloudy
             Rectangle:
                 pos: self.pos
                 size: self.size
@@ -350,7 +387,7 @@ RootScreen:
             size_hint_x: None
             width: 100
             text: "Play"
-            background_color: get_color_from_hex("5779a4")
+            background_color: deep_blue
             background_normal: ""
             on_press: root.play(root.path_name)
         ProgressBar:
@@ -371,7 +408,7 @@ RootScreen:
             text: "Save"
             size_hint_x: None
             width: 100
-            background_color: get_color_from_hex("5779a4")
+            background_color: deep_blue
             background_normal: ""
             on_press: root.edit_scot(root.path_name, title.text, yr.text, artist.text, ending.text, note.text, intro.text, eom.text, s_date.text, e_date.text, s_hour.text, e_hour.text, rename = rename.text)
 

@@ -2,6 +2,7 @@ from kivy.config import Config
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 
 from kivy.app import App
+from kivy.core.window import Window
 from kivy.uix.button import Button
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
@@ -13,38 +14,30 @@ from kivy.properties import ObjectProperty
 from kivy.properties import StringProperty
 from kivy.properties import NumericProperty
 from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.behaviors.compoundselection import CompoundSelectionBehavior
+from kivy.uix.behaviors import FocusBehavior
 from kivy.clock import Clock
 import parse_kivy
 
 
 
-#widget.walk(restrict=True) looks nice
+#widget.walk(restrict=True)
 
-#Multi-select?
-#TextInput truncation
-#Adjustable columns + Sortable
-#Clear grid button
-#Edit VS Convert scott
-#Error popups
-#Log Files
-#Network IP config
-#Improve selection/availability mechanic
-#Drop file
-#NetworkCommands needs to be set up properly
-
-class GridOfButtons:
+class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
 
     def __init__(self):
         self._avail = 0
-        self._sel_row = None
         self._sel_file = ""
-        self._sel_type = None
         self._sel_start = None
         self._sel_end = None
+
+
 
     def button_press(self, button, touch):
         if button.collide_point(touch.x, touch.y):
             self.grid_touch_actions(button, touch)
+
+
 
     def create_grid(self, width_list, rows_to_create):
         #Width_list is a list of ints, relating to the intended
@@ -53,7 +46,9 @@ class GridOfButtons:
         for row in range(rows_to_create):
             for width_of_col in width_list:
                 grid_button = Button(text = '', valign = 'middle', size_hint_y = None,
-                    height = 50, width = width_of_col, background_color = (1,0,0,1))
+                    height = 30, width = width_of_col, background_color = (0.86, 0.86, 0.86, 1),
+                    background_normal = '', color = (0.13, 0.15, 0.17, 1))
+
                 grid_button.bind(size=grid_button.setter('text_size'))
                 grid_button.bind(on_touch_up=self.button_press)
                 self.add_widget(grid_button)
@@ -112,7 +107,8 @@ class GridOfButtons:
                 #Single-click
                 #Deselect visually
                 for widget in self.children[self._sel_start: self._sel_end]:
-                    widget.background_color = (1, 1, 1, 1)
+                    widget.background_color = (0.86, 0.86, 0.86, 1)
+                    widget.color = (0.13, 0.15, 0.17, 1)
 
                 index = (len(self.children) - 1) - self.children.index(child)
                 row = index // self.cols
@@ -120,45 +116,21 @@ class GridOfButtons:
                 start = end - self.cols
 
                 self._sel_file = self.children[start].text
-                self._sel_type = self.children[start + 1].text
-                self._sel_row = row
                 self._sel_start = start
                 self._sel_end = end
-
-                # print("-" * 70)
-                # print("Selected Row: ", self._sel_row)
-                # print("Start", start, "End", end - 1)
-                # print("File Type:", self._sel_type)
-                # print("Filename:", self._sel_file)
-                # print("-" * 70)
 
                 if self._sel_file:
                     if touch.button == 'left':
                         #Visual selection
                         for widget in self.children[self._sel_start: self._sel_end]:
-                            widget.background_color = (0.0, 1.0, 1.0, 1.0)
+                            widget.background_color = (0.35, 0.24, 0.38, 1.0)
+                            widget.color = (0.86, 0.86, 0.86, 1)
 
                     elif touch.button == 'right':
                         #Empty/Unload a row
                         for widget in self.children[self._sel_start: self._sel_end]:
                             widget.text = ''
 
-
-    def on_touch_up(self, touch, out_of_bounds = "", verbose = False):
-        if not self.collide_point(touch.x, touch.y):
-            if verbose:
-                print("-" * 70)
-                print("Didn't collide with:", out_of_bounds)
-                print("Touch was:", touch.x, touch.y)
-                print("Scrollview is:", self.pos, self.size)
-                print("-" * 70)
-        else:
-            if verbose:
-                print("-" * 70)
-                print("Successful Touch was:", touch.x, touch.y)
-                print("Successful Scrollview is:", self.pos, self.size)
-                print("-" * 70)
-            GridOfButtons.grid_touch_actions(self.children[0], touch)
 
     def __str__(self):
         length = '{} {}'.format('Grid of size:', len(self.children))
@@ -178,15 +150,14 @@ class NetworkQueueHeader(BoxLayout):
 
 class NetworkQueueScroll(ScrollView):
     pass
-    # def on_touch_up(self, touch):
-    #     super().on_touch_up(touch)
-    #     GridOfButtons.on_touch_up(self, touch, out_of_bounds = "NetworkQueue---")
+
 
 class NetworkQueue(GridLayout, GridOfButtons):
 
     def __init__(self, **kwargs):
         super(NetworkQueue, self).__init__(**kwargs)
-        self.create_grid([100, 100], 10)
+        self.create_grid([100, 100], 35)
+
 
     def set_info(self, data_to_write):
         GridOfButtons.set_info(self, data_to_write, [100, 100])
@@ -195,7 +166,7 @@ class NetworkQueue(GridLayout, GridOfButtons):
     def show_load(self):
         content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
         self._popup = Popup(title="Load file", content=content,
-                            size_hint=(0.9, 0.9))
+                            size_hint=(0.75, 0.75))
         self._popup.open()
 
     def load(self, path, filenames):
@@ -263,9 +234,7 @@ class EditingGridHeader(BoxLayout):
 
 class EditingGridScroll(ScrollView):
     pass
-    # def on_touch_up(self, touch):
-    #     super().on_touch_up(touch)
-    #     GridOfButtons.on_touch_up(self, touch, out_of_bounds = "EditingGrid---")
+
 
 class EditingGrid(GridLayout, GridOfButtons):
 
@@ -273,7 +242,33 @@ class EditingGrid(GridLayout, GridOfButtons):
 
     def __init__(self, **kwargs):
         super(EditingGrid, self).__init__(**kwargs)
-        self.create_grid([100, 100, 100, 100, 100, 100, 100], 10)
+        self.create_grid([100, 100, 100, 100, 100, 100, 100], 30)
+        Window.bind(on_dropfile=self.file_drop)
+
+
+    def file_drop(self, window, path_in_bytes):
+        from os.path import isdir
+        a_path = path_in_bytes.decode('utf-8')
+        list_of_files = [a_path]
+        if isdir(a_path):
+            list_of_files = self.files_from_directory(a_path)
+        self.load("Dropped files", list_of_files)
+
+    def files_from_directory(self, directory, depth = 1):
+        from os import listdir
+        from os.path import isfile, join
+
+        file_list = []
+        for a_path in listdir(directory):
+            a_path = join(directory, a_path)
+            if isfile(a_path):
+                file_list.append(a_path)
+            elif depth > 1:
+                file_list.extend(self.files_from_directory(a_path, depth = depth - 1))
+        return file_list
+
+
+
 
     def set_info(self, data_to_write):
         GridOfButtons.set_info(self, data_to_write, [100, 100, 100, 100, 100, 100, 100])
@@ -282,7 +277,7 @@ class EditingGrid(GridLayout, GridOfButtons):
     def show_load(self):
         content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
         self._popup = Popup(title="Load file", content=content,
-                            size_hint=(0.9, 0.9))
+                            size_hint=(0.75, 0.75))
         self._popup.open()
 
     def info_from_file(self, filename):
@@ -291,24 +286,24 @@ class EditingGrid(GridLayout, GridOfButtons):
             with open(filename, 'rb') as f:
                 f.seek(72)
                 try:
-                    title = f.read(43).decode("ascii")
+                    title = f.read(43).decode("utf-8")
                 except UnicodeDecodeError:
                     title = "None"
 
                 try:
-                    id_num = f.read(4).decode("ascii")
+                    id_num = f.read(4).decode("utf-8")
                 except UnicodeDecodeError:
                     id_num = "None"
 
                 f.seek(139)
                 try:
-                    end_date = f.read(6).decode("ascii")
+                    end_date = f.read(6).decode("utf-8")
                 except UnicodeDecodeError:
                     end_date = "None"
 
                 f.seek(335)
                 try:
-                    artist = f.read(34).decode("ascii")
+                    artist = f.read(34).decode("utf-8")
                 except UnicodeDecodeError:
                     artist = "None"
             data_to_write = [id_num, title, artist, end_date, basename(filename), splitext(filename)[1], filename]
@@ -326,7 +321,8 @@ class EditingGrid(GridLayout, GridOfButtons):
             data = self.info_from_file(filename)
             if data:
                 self.set_info(data)
-        self.dismiss_popup()
+        if path != "Dropped files":
+            self.dismiss_popup()
 
 
     def dismiss_popup(self):
@@ -337,6 +333,12 @@ class EditingGrid(GridLayout, GridOfButtons):
         source = '{} {}'.format('Source:', 'Editing Grid')
         return '{}\n{}'.format(source, super().__str__())
 
+
+class EditingGridCommands(BoxLayout):
+    editing_grid = ObjectProperty(None)
+
+    def clear_grid(self):
+        GridOfButtons.clear_grid(self.editing_grid)
 
 class LoadDialog(FloatLayout):
     load = ObjectProperty(None)
