@@ -45,7 +45,7 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
 
         for row in range(rows_to_create):
             for x_hint in x_hint_list:
-                grid_button = Button(text = '', valign = 'middle', size_hint_y = None,
+                grid_button = Button(text = '', valign = 'middle', shorten = True, size_hint_y = None,
                     height = 30,  size_hint_x = x_hint, background_color = (0.86, 0.86, 0.86, 1),
                     background_normal = '', color = (0.13, 0.15, 0.17, 1))
 
@@ -96,7 +96,9 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
             end = length - (next_row * self.cols)
             start = end - self.cols
             for i, widget in enumerate(reversed(self.children[start:end])):
-                widget.text = data_to_write[i]
+                #strip text primarily for title and artist, so shorten
+                #doesn't take into account the trailing whitespace
+                widget.text = data_to_write[i].strip()
             self._avail -= 1
 
     def grid_touch_actions(self, child, touch):
@@ -155,7 +157,7 @@ class NetworkQueueHeader(BoxLayout):
 
         for col in range(cols):
             label = Label(text = col_names[col], size_hint_y = None, height = 30,
-                        size_hint_x = x_hint_list[col])
+                        size_hint_x = x_hint_list[col], bold = True)
             self.add_widget(label)
 
 class NetworkQueueScroll(ScrollView):
@@ -252,7 +254,7 @@ class EditingGridHeader(BoxLayout):
 
         for col in range(cols):
             label = Label(text = col_names[col], size_hint_y = None, height = 30,
-                        size_hint_x = x_hint_list[col])
+                        size_hint_x = x_hint_list[col], bold = True)
             self.add_widget(label)
 
 class EditingGridScroll(ScrollView):
