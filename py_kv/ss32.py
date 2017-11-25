@@ -31,47 +31,71 @@ from kivy.config import ConfigParser
 config = ConfigParser()
 config.read('ss32.ini')
 
-def set_up(cfg_ins):
+def set_up(cfg_ins, filename):
     global cfg_recur_depth
     cfg_recur_depth = cfg_ins.getdefaultint('internals', 'recursion_depth', 1)
 
     global cfg_primary_deep
-    cfg_primary_deep = cfg_ins.getdefault('colours', 'primary_deep', '0c3c60')
-    cfg_primary_deep = get_color_from_hex(cfg_primary_deep)
+    raw_primary_deep = cfg_ins.getdefault('colours', 'primary_deep', '0c3c60')
+    cfg_primary_deep = get_color_from_hex(raw_primary_deep)
 
     global cfg_primary_medium
-    cfg_primary_medium = cfg_ins.getdefault('colours', 'primary_medium', '39729b')
-    cfg_primary_medium = get_color_from_hex(cfg_primary_medium)
+    raw_primary_medium = cfg_ins.getdefault('colours', 'primary_medium', '39729b')
+    cfg_primary_medium = get_color_from_hex(raw_primary_medium)
 
     global cfg_primary_light
-    cfg_primary_light = cfg_ins.getdefault('colours', 'primary_light', '6ea4ca')
-    cfg_primary_light = get_color_from_hex(cfg_primary_light)
+    raw_primary_light = cfg_ins.getdefault('colours', 'primary_light', '6ea4ca')
+    cfg_primary_light = get_color_from_hex(raw_primary_light)
 
     global cfg_primary_neutral
-    cfg_primary_neutral = cfg_ins.getdefault('colours', 'primary_neutral', 'dbdbdb')
-    cfg_primary_neutral = get_color_from_hex(cfg_primary_neutral)
+    raw_primary_neutral = cfg_ins.getdefault('colours', 'primary_neutral', 'dbdbdb')
+    cfg_primary_neutral = get_color_from_hex(raw_primary_neutral)
 
     global cfg_primary_dark
-    cfg_primary_dark = cfg_ins.getdefault('colours', 'primary_dark', '21252B')
-    cfg_primary_dark = get_color_from_hex(cfg_primary_dark)
+    raw_primary_dark = cfg_ins.getdefault('colours', 'primary_dark', '21252B')
+    cfg_primary_dark = get_color_from_hex(raw_primary_dark)
 
     global cfg_aux_dark
-    cfg_aux_dark = cfg_ins.getdefault('colours', 'aux_dark', '3e3a47')
-    cfg_aux_dark = get_color_from_hex(cfg_aux_dark)
+    raw_aux_dark = cfg_ins.getdefault('colours', 'aux_dark', '3e3a47')
+    cfg_aux_dark = get_color_from_hex(raw_aux_dark)
 
     global cfg_aux_neutral
-    cfg_aux_neutral = cfg_ins.getdefault('colours', 'aux_neutral', 'd1e0eb')
-    cfg_aux_neutral = get_color_from_hex(cfg_aux_neutral)
+    raw_aux_neutral = cfg_ins.getdefault('colours', 'aux_neutral', 'd1e0eb')
+    cfg_aux_neutral = get_color_from_hex(raw_aux_neutral)
 
     global cfg_aux_deep
-    cfg_aux_deep = cfg_ins.getdefault('colours', 'aux_deep', '39273F')
-    cfg_aux_deep = get_color_from_hex(cfg_aux_deep)
+    raw_aux_deep = cfg_ins.getdefault('colours', 'aux_deep', '39273F')
+    cfg_aux_deep = get_color_from_hex(raw_aux_deep)
 
     global cfg_select_medium
-    cfg_select_medium = cfg_ins.getdefault('colours', 'select_medium', '553A5E')
-    cfg_select_medium = get_color_from_hex(cfg_select_medium)
+    raw_select_medium = cfg_ins.getdefault('colours', 'select_medium', '553A5E')
+    cfg_select_medium = get_color_from_hex(raw_select_medium)
 
-set_up(config)
+
+    try:
+         with open(filename, 'r+') as kv_file:
+             for i in range(7):
+                 next(kv_file)
+
+             colour_list = [raw_primary_deep, raw_primary_medium, raw_primary_light,
+                raw_primary_neutral, raw_aux_neutral, raw_primary_dark, raw_aux_dark, raw_aux_deep]
+
+             for i in range(8):
+                line = kv_file.readline().strip()
+                if line[:2] == '#:':
+                    start, hex_code, end = line.split("'")
+                    hex_code = colour_list[i]
+                    new_line = "'".join([start, hex_code, end])
+                    #print(new_line)
+
+                else:
+                    print("Comment, this shouldn't occur.")
+    except IOError:
+        print("--- modify_kv: Problem opening file.")
+
+
+
+set_up(config, 'ss32.kv')
 
 
 class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
