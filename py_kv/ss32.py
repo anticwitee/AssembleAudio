@@ -39,14 +39,14 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
 
 
 
-    def create_grid(self, width_list, rows_to_create):
-        #Width_list is a list of ints, relating to the intended
+    def create_grid(self, x_hint_list, rows_to_create):
+        #x_hint_list is a list of ints, relating to the intended
         #width of each column in the grid.
 
         for row in range(rows_to_create):
-            for width_of_col in width_list:
+            for x_hint in x_hint_list:
                 grid_button = Button(text = '', valign = 'middle', size_hint_y = None,
-                    height = 30, width = width_of_col, background_color = (0.86, 0.86, 0.86, 1),
+                    height = 30,  size_hint_x = x_hint, background_color = (0.86, 0.86, 0.86, 1),
                     background_normal = '', color = (0.13, 0.15, 0.17, 1))
 
                 grid_button.bind(size=grid_button.setter('text_size'))
@@ -79,7 +79,7 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
             for i, widget in enumerate(reversed(self.children[start:end])):
                 widget.text = data_to_write[i]
 
-    def set_info(self, data_to_write, width_list, num_rows_to_add = 3):
+    def set_info(self, data_to_write, x_hint_list, num_rows_to_add = 3):
         #Takes in the file data, and updates the Grid to represent
         #and indicate the files that are loaded with their metadata.
 
@@ -89,7 +89,7 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
             threshold = 3
             #If < threshold available rows left, add more
             if self._avail < threshold:
-                self.create_grid(width_list, num_rows_to_add)
+                self.create_grid(x_hint_list, num_rows_to_add)
 
             length = len(self.children)
             next_row = self.find_next_row()
@@ -146,7 +146,17 @@ class Frequent(BoxLayout):
     pass
 
 class NetworkQueueHeader(BoxLayout):
-    pass
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        x_hint_list = [0.45, 0.55]
+        cols = len(x_hint_list)
+        col_names = ['Filename', 'Pathname']
+
+        for col in range(cols):
+            label = Label(text = col_names[col], size_hint_y = None, height = 30,
+                        size_hint_x = x_hint_list[col])
+            self.add_widget(label)
 
 class NetworkQueueScroll(ScrollView):
     pass
@@ -154,13 +164,15 @@ class NetworkQueueScroll(ScrollView):
 
 class NetworkQueue(GridLayout, GridOfButtons):
 
+    x_hint_list = [0.45, 0.55]
+
     def __init__(self, **kwargs):
         super(NetworkQueue, self).__init__(**kwargs)
-        self.create_grid([100, 100], 35)
+        self.create_grid(NetworkQueue.x_hint_list, 35)
 
 
     def set_info(self, data_to_write):
-        GridOfButtons.set_info(self, data_to_write, [100, 100])
+        GridOfButtons.set_info(self, data_to_write, NetworkQueue.x_hint_list)
 
     #FileChooserMethods
     def show_load(self):
@@ -230,7 +242,18 @@ class NetworkCommands(BoxLayout):
 
 
 class EditingGridHeader(BoxLayout):
-    pass
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        x_hint_list = [0.05, 0.15, 0.15, 0.075, 0.20, 0.075, 0.3]
+        cols = len(x_hint_list)
+        col_names = ['ID', 'Title', 'Artist', 'End Date',
+                    'Filename', 'Type', 'Pathname']
+
+        for col in range(cols):
+            label = Label(text = col_names[col], size_hint_y = None, height = 30,
+                        size_hint_x = x_hint_list[col])
+            self.add_widget(label)
 
 class EditingGridScroll(ScrollView):
     pass
@@ -239,10 +262,11 @@ class EditingGridScroll(ScrollView):
 class EditingGrid(GridLayout, GridOfButtons):
 
     _sel_file = StringProperty('')
+    x_hint_list = [0.05, 0.15, 0.15, 0.075, 0.20, 0.075, 0.3]
 
     def __init__(self, **kwargs):
         super(EditingGrid, self).__init__(**kwargs)
-        self.create_grid([100, 100, 100, 100, 100, 100, 100], 30)
+        self.create_grid(EditingGrid.x_hint_list, 30)
         Window.bind(on_dropfile=self.file_drop)
 
 
@@ -271,7 +295,7 @@ class EditingGrid(GridLayout, GridOfButtons):
 
 
     def set_info(self, data_to_write):
-        GridOfButtons.set_info(self, data_to_write, [100, 100, 100, 100, 100, 100, 100])
+        GridOfButtons.set_info(self, data_to_write, EditingGrid.x_hint_list)
 
     #FileChooserMethods
     def show_load(self):

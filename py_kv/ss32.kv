@@ -22,16 +22,6 @@
 
 #Padding doesn't decrease widget size (Bounding Box)
 
-<GridButton@Button>:
-    text_size: self.width - pad_value_large, self.height - pad_value_large
-    valign: 'middle'
-    text: ''
-    size_hint_y: None
-    height: 30
-
-<GridTitle@Label>:
-    size_hint_y: None
-    height: 30
 
 <TabText@TextInput>:
     write_tab: False
@@ -213,10 +203,6 @@ RootScreen:
         Rectangle:
             pos: self.pos
             size: self.size
-    GridTitle:
-        text: "Filename"
-    GridTitle:
-        text: "Pathname"
 
 <NetworkCommands>:
     Button:
@@ -238,20 +224,6 @@ RootScreen:
         Rectangle:
             pos: self.pos
             size: self.size
-    GridTitle:
-        text: "ID"
-    GridTitle:
-        text: "Title"
-    GridTitle:
-        text: "Artist"
-    GridTitle:
-        text: "End Date"
-    GridTitle:
-        text: "Filename"
-    GridTitle:
-        text: "Type"
-    GridTitle:
-        text: "Pathname"
 
 
 <EditingGrid>:
