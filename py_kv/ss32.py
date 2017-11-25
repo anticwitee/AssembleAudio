@@ -116,6 +116,10 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
     def edit_row(self, index, data_to_write):
         if len(data_to_write) != self.cols:
             print("--Edit Row:  Data mismatch error.")
+            popup = Popup(title='Grid Error 01',
+                    content=Label(text = 'There was a problem in updating the grid.'),
+                    size_hint = (0.3, 0.3))
+            popup.open()
         else:
             end = len(self.children) - (index * self.cols)
             start = end - self.cols
@@ -129,6 +133,10 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
 
         if len(data_to_write) != self.cols:
             print("--Set info:  Data mismatch error.")
+            popup = Popup(title='Grid Error 02',
+                    content=Label(text = 'There was a problem in updating the grid.'),
+                    size_hint = (0.3, 0.3))
+            popup.open()
         else:
             threshold = 3
             #If < threshold available rows left, add more
@@ -379,6 +387,10 @@ class EditingGrid(GridLayout, GridOfButtons):
 
         except IOError:
             print("--info_from_file-- Cannot find file {}".format(filename))
+            popup = Popup(title='File Error',
+                    content=Label(text = 'Cannot find file {}'.format(filename)),
+                    size_hint = (0.3, 0.3))
+            popup.open()
 
     def load(self, path, filenames):
         #Should check file type first.
@@ -502,11 +514,13 @@ class UserInput(BoxLayout):
                 sound.volume = self.ids.volume_slider.value
                 sound.play()
             else:
+                print("Cannot play the file %s." % path)
+                error_msg = 'Cannot play the file %s.' % (path) if path else 'No file selected.'
                 popup = Popup(title='Audio Error.',
-                        content=Label(text='Cannot play the file %s.' % path),
+                        content=Label(text= error_msg),
                         size_hint = (0.3, 0.3))
                 popup.open()
-                print("Cannot play the file %s." % path)
+
 
     def edit_scot(self, filename, *args, rename = ''):
         #Takes in a variable amount of attributes. If they are the correct
@@ -519,9 +533,8 @@ class UserInput(BoxLayout):
                  ("end", "str"), ("note", "str"), ("intro", "str"),
                  ("eom", "int"), ("s_date", "str"), ("e_date", "str"),
                  ("s_hour", "str"), ("e_hour", "str")]
-        edit = []
-        # print(args)
 
+        edit = []
         for i in range(len(args)):
             if len(args[i]) == valid_len[i]:
                 data = args[i]
@@ -540,35 +553,33 @@ class UserInput(BoxLayout):
             elif args[i]:
                 print("---edit_scot Arg {} is a rogue, data: {}---".format(i, args[i]))
 
-        # print("---edit_scot Edit List: ", edit)
-        # print("---edit_scot Rename, ", rename)
-        # print("---edit_scot Filename, ", filename)
+        if filename:
+            ret_values = parse_kivy.wav_File_Handler(filename, edit, new_name = rename)
+            #Update the EditingGrid to display accurate info
+            if ret_values:
+                renamed, edited = ret_values
+                if renamed or edited:
+                    if renamed and edited:
+                        data = EditingGrid.info_from_file(self, renamed)
+                    else:
+                        data = EditingGrid.info_from_file(self, filename)
 
-        ret_values = parse_kivy.wav_File_Handler(filename, edit, new_name = rename)
-        #Update the EditingGrid to display accurate info
-        if ret_values:
-            renamed, edited = ret_values
-            if renamed or edited:
-                if renamed and edited:
-                    data = EditingGrid.info_from_file(self, renamed)
-                else:
-                    data = EditingGrid.info_from_file(self, filename)
-
-                index = GridOfButtons.get_row_index(self.editing_grid, filename)
-                if data and (index != None):
-                    GridOfButtons.edit_row(self.editing_grid, index, data)
+                    index = GridOfButtons.get_row_index(self.editing_grid, filename)
+                    if data and (index != None):
+                        GridOfButtons.edit_row(self.editing_grid, index, data)
+        else:
+            error_msg = 'No file selected.'
+            popup = Popup(title='Conversion/Editing Error.',
+                    content=Label(text= error_msg),
+                    size_hint = (0.3, 0.3))
+            popup.open()
 
 
-class AScreen(Screen):
-    #testable screen
-    pass
+
 
 
 class Config(Screen):
     pass
-
-
-
 
 class ss32App(App):
     def build(self):
