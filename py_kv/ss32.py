@@ -1,5 +1,6 @@
 from kivy.config import Config
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
+Config.write()
 
 from kivy.app import App
 from kivy.core.window import Window
@@ -18,11 +19,60 @@ from kivy.uix.behaviors.compoundselection import CompoundSelectionBehavior
 from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.settings import SettingsWithSidebar
 from kivy.clock import Clock
+from kivy.utils import get_color_from_hex
 import parse_kivy
 
 
-
 #widget.walk(restrict=True)
+
+
+
+from kivy.config import ConfigParser
+config = ConfigParser()
+config.read('ss32.ini')
+
+def set_up(cfg_ins):
+    global cfg_recur_depth
+    cfg_recur_depth = cfg_ins.getdefaultint('internals', 'recursion_depth', 1)
+
+    global cfg_primary_deep
+    cfg_primary_deep = cfg_ins.getdefault('colours', 'primary_deep', '0c3c60')
+    cfg_primary_deep = get_color_from_hex(cfg_primary_deep)
+
+    global cfg_primary_medium
+    cfg_primary_medium = cfg_ins.getdefault('colours', 'primary_medium', '39729b')
+    cfg_primary_medium = get_color_from_hex(cfg_primary_medium)
+
+    global cfg_primary_light
+    cfg_primary_light = cfg_ins.getdefault('colours', 'primary_light', '6ea4ca')
+    cfg_primary_light = get_color_from_hex(cfg_primary_light)
+
+    global cfg_primary_neutral
+    cfg_primary_neutral = cfg_ins.getdefault('colours', 'primary_neutral', 'dbdbdb')
+    cfg_primary_neutral = get_color_from_hex(cfg_primary_neutral)
+
+    global cfg_primary_dark
+    cfg_primary_dark = cfg_ins.getdefault('colours', 'primary_dark', '21252B')
+    cfg_primary_dark = get_color_from_hex(cfg_primary_dark)
+
+    global cfg_aux_dark
+    cfg_aux_dark = cfg_ins.getdefault('colours', 'aux_dark', '3e3a47')
+    cfg_aux_dark = get_color_from_hex(cfg_aux_dark)
+
+    global cfg_aux_neutral
+    cfg_aux_neutral = cfg_ins.getdefault('colours', 'aux_neutral', 'd1e0eb')
+    cfg_aux_neutral = get_color_from_hex(cfg_aux_neutral)
+
+    global cfg_aux_deep
+    cfg_aux_deep = cfg_ins.getdefault('colours', 'aux_deep', '39273F')
+    cfg_aux_deep = get_color_from_hex(cfg_aux_deep)
+
+    global cfg_select_medium
+    cfg_select_medium = cfg_ins.getdefault('colours', 'select_medium', '553A5E')
+    cfg_select_medium = get_color_from_hex(cfg_select_medium)
+
+set_up(config)
+
 
 class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
 
@@ -47,8 +97,8 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
         for row in range(rows_to_create):
             for x_hint in x_hint_list:
                 grid_button = Button(text = '', valign = 'middle', shorten = True, size_hint_y = None,
-                    height = 30,  size_hint_x = x_hint, background_color = (0.86, 0.86, 0.86, 1),
-                    background_normal = '', color = (0.13, 0.15, 0.17, 1))
+                    height = 30,  size_hint_x = x_hint, background_color = cfg_primary_neutral,
+                    background_normal = '', color = cfg_primary_dark)
 
                 grid_button.bind(size=grid_button.setter('text_size'))
                 grid_button.bind(on_touch_up=self.button_press)
@@ -162,8 +212,8 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
                 #Single-click
                 #Deselect visually
                 for widget in self.children[self._sel_start: self._sel_end]:
-                    widget.background_color = (0.86, 0.86, 0.86, 1)
-                    widget.color = (0.13, 0.15, 0.17, 1)
+                    widget.background_color = cfg_primary_neutral
+                    widget.color = cfg_primary_dark
 
                 index = (len(self.children) - 1) - self.children.index(child)
                 row = index // self.cols
@@ -179,8 +229,8 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
                     if touch.button == 'left':
                         #Visual selection
                         for widget in self.children[self._sel_start: self._sel_end]:
-                            widget.background_color = (0.35, 0.24, 0.38, 1.0)
-                            widget.color = (0.86, 0.86, 0.86, 1)
+                            widget.background_color = cfg_select_medium
+                            widget.color = cfg_primary_neutral
 
                     elif touch.button == 'right':
                         self.remove_row(self._sel_start, self._sel_end)
@@ -333,7 +383,7 @@ class EditingGrid(GridLayout, GridOfButtons):
             list_of_files = self.files_from_directory(a_path)
         self.load("Dropped files", list_of_files)
 
-    def files_from_directory(self, directory, depth = 1):
+    def files_from_directory(self, directory, depth = cfg_recur_depth):
         from os import listdir
         from os.path import isfile, join
 

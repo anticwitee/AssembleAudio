@@ -29,7 +29,7 @@
 
     {
         "type": "string",
-        "title": "Primary light",
+        "title": "Primary Light",
         "desc": "Changes the primary light colour.",
         "section": "colours",
         "key": "primary_light"
@@ -73,5 +73,13 @@
         "desc": "Changes the auxillary deep colour.",
         "section": "colours",
         "key": "aux_deep"
+    },
+
+    {
+        "type": "string",
+        "title": "Selection Medium",
+        "desc": "Changes the colour of the selection.",
+        "section": "colours",
+        "key": "select_medium"
     }
 ]
