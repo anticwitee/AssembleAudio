@@ -524,8 +524,7 @@ class UserInput(BoxLayout):
         super(UserInput, self).__init__(**kwargs)
         self._sound = None
         self._sound_pos = None
-        self._sound_clock = None
-        self._sound_clock_clean = None
+        self._update_bar_schedule = None
 
     def update_volume(self, volume):
         if self._sound:
@@ -533,67 +532,71 @@ class UserInput(BoxLayout):
 
     def update_bar(self, dt):
         if self._sound:
-            self.ids.p_bar.value = self._sound.get_pos()
+            if self._sound.state == 'play':
+                self.ids.p_bar.value = self._sound.get_pos()
+            else:
+                #Sound has naturally stopped
+                if self._sound_pos == None:
+                    self.ids.p_bar.value = 0
+                self._update_bar_schedule.cancel()
 
-    def clean_up(self, dt):
-        print("Cleaned up")
-        self._sound_clock.cancel()
 
     def pause(self):
         self._sound_pos = self._sound.get_pos()
-        self._sound_clock.cancel()
-        self._sound_clock_clean.cancel()
+        self._update_bar_schedule.cancel()
         self._sound.stop()
-        print("Postion:", self._sound_pos)
 
     def resume(self):
-        self._sound_clock()
-        cleanup = Clock.schedule_once(self.clean_up, (self._sound.length - self._sound.get_pos()) + 1)
-        self._sound_clock_clean = cleanup
+        self._update_bar_schedule()
         self._sound.play()
 
         if self._sound_pos:
-            print("Seek to:", self._sound_pos)
             self._sound.seek(self._sound_pos)
+        self._sound_pos = None
 
     def play(self, path):
         from kivy.core.audio import SoundLoader
-        #Could be more elegant with regard to
-        #natural stopping/self._sound_clock_clean
-        if self._sound and self._sound.source == path:
+
+        if not self._sound:
+            self.load_audio_file(path)
+        elif self._sound.source == path:
             if self._sound.state == "play":
                 self.pause()
             else:
                 self.resume()
         else:
-            if self._sound:
-                self._sound_clock.cancel()
-                self._sound_clock_clean.cancel()
-                self._sound.stop()
-                self._sound_pos = None
-                self._sound.unload()
+            #they want to play a different file
+            self.unload_audio_file()
+            self.load_audio_file(path)
 
-            sound = SoundLoader.load(path)
-            self._sound = sound
-            print('Path: ', path)
-            if sound:
-                print("Sound found at", sound.source)
-                print("Sound is %3.f seconds" % sound.length)
-                progress = Clock.schedule_interval(self.update_bar, 1)
-                cleanup = Clock.schedule_once(self.clean_up, sound.length + 1)
-                self._sound_clock_clean = cleanup
-                self._sound_clock = progress
+    def unload_audio_file(self):
+        if self._sound:
+            self._update_bar_schedule.cancel()
+            self._sound.stop()
+            self._sound_pos = None
+            self._sound.unload()
 
-                self.ids.p_bar.max = sound.length
-                sound.volume = self.ids.volume_slider.value
-                sound.play()
-            else:
-                print("Cannot play the file %s." % path)
-                error_msg = 'Cannot play the file %s.' % (path) if path else 'No file selected.'
-                popup = Popup(title='Audio Error.',
-                        content=Label(text= error_msg),
-                        size_hint = (0.3, 0.3))
-                popup.open()
+
+    def load_audio_file(self, path):
+        from kivy.core.audio import SoundLoader
+
+        sound = SoundLoader.load(path)
+        self._sound = sound
+
+        if sound:
+            update_bar_schedule = Clock.schedule_interval(self.update_bar, 1)
+            self._update_bar_schedule = update_bar_schedule
+
+            self.ids.p_bar.max = sound.length
+            sound.volume = self.ids.volume_slider.value
+            sound.play()
+        else:
+            print("Cannot play the file %s." % path)
+            error_msg = 'Cannot play the file %s.' % (path) if path else 'No file selected.'
+            popup = Popup(title='Audio Error.',
+                    content=Label(text= error_msg),
+                    size_hint = (0.3, 0.3))
+            popup.open()
 
 
     def edit_scot(self, filename, *args, rename = ''):
