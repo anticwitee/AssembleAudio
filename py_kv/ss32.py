@@ -113,7 +113,6 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
             self.grid_touch_actions(button, touch)
 
 
-
     def create_grid(self, x_hint_list, rows_to_create):
         #x_hint_list is a list of ints, relating to the intended
         #width of each column in the grid.
@@ -125,7 +124,7 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
                     background_normal = '', color = cfg_primary_dark)
 
                 grid_button.bind(size=grid_button.setter('text_size'))
-                grid_button.bind(on_touch_up=self.button_press)
+                grid_button.bind(on_touch_down=self.button_press)
                 self.add_widget(grid_button)
         self._avail += rows_to_create
 
