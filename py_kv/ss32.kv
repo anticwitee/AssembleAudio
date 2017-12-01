@@ -5,14 +5,15 @@
 
 #Colours
 
-#:set deep_blue get_color_from_hex('0c3c60')
-#:set medium_blue get_color_from_hex('39729b')
-#:set light_blue get_color_from_hex('6ea4ca')
-#:set white_shade get_color_from_hex('dbdbdb')
-#:set cloudy get_color_from_hex('d1e0eb')
-#:set v_dark_grey get_color_from_hex('21252B')
-#:set medium_grey get_color_from_hex('3e3a47')
-#:set dark_purple get_color_from_hex('39273F')
+#:set deep_blue get_color_from_hex(app.get_primary_deep())
+#:set medium_blue get_color_from_hex(app.get_primary_medium())
+#:set light_blue get_color_from_hex(app.get_primary_light())
+#:set white_shade get_color_from_hex(app.get_primary_neutral())
+#:set v_dark_grey get_color_from_hex(app.get_primary_dark())
+#:set medium_grey get_color_from_hex(app.get_aux_dark())
+#:set cloudy get_color_from_hex(app.get_aux_neutral())
+#:set dark_purple get_color_from_hex(app.get_aux_deep())
+
 
 
 #Padding fix required for EditingGrid
@@ -416,22 +417,12 @@ RootScreen:
                 value: 1
                 step: 0.1
                 on_touch_move: for widget in test_area.children: widget.size_hint_y = self.value
-            Label:
-                text: "Toggle orientation"
-            Switch:
-                on_touch_up: test_area.orientation = 'horizontal' if self.active else 'vertical'
 
 
         GridLayout:
             id: test_area
             cols: 4
             Label:
-                canvas.before:
-                    Color:
-                        rgba: 1, 0, 0, 1
-                    Rectangle:
-                        pos: self.pos
-                        size: self.size
                 text: "File Type"
             Label:
                 text: "Stat2"
