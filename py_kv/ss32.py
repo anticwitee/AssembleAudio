@@ -592,29 +592,27 @@ class UserInput(BoxLayout):
         #function that writes the actual bytes to the file.
 
         valid_len = (43, 4, 34, 1, 34, 2, 6, 6, 6, 1, 1)
-        dtype = [("title", "str"), ("year", "str"), ("artist" ,"str"),
-                 ("end", "str"), ("note", "str"), ("intro", "str"),
-                 ("eom", "int"), ("s_date", "str"), ("e_date", "str"),
+        dtype = [("note", "str") , ("title", "str"), ("artist" ,"str"),
+                 ("audio_id", "str"), ("year", "str"), ("end", "str"),
+                 ("intro", "str"), ("eom", "int") ("s_date", "str"), ("e_date", "str"),
                  ("s_hour", "str"), ("e_hour", "str")]
 
+
         edit = []
-        for i in range(len(args)):
-            if len(args[i]) == valid_len[i]:
-                data = args[i]
-                try:
-                    if dtype[i][1] == "int":
-                        data = int(data)
-                except:
-                    print("---edit_scot Arg {} should be an int. Data: {}.---".format(i, data))
-                else:
-                    name = dtype[i][0]
-                    edit.append((name, data))
-            elif (i == 0 or i == 2 or i == 4) and args[i]:
-                data = args[i] + (" " * (valid_len[i] - len(args[i])))
-                name = dtype[i][0]
-                edit.append((name, data))
-            elif args[i]:
-                print("---edit_scot Arg {} is a rogue, data: {}---".format(i, args[i]))
+        for i, attrib in enumerate(args):
+            if len(attrib) == valid_len[i]:
+                if dtype[i][1] == "int":
+                    if isinstance(attrib, int):
+                        attrib = int(attrib)
+                    else:
+                        print("---edit_scot Arg {} should be an int. Data: {}.---".format(i, attrib))
+            elif i < 3 and attrib:
+                attrib += " " * (valid_len[i] - len(attrib))
+            elif attrib:
+                print("---edit_scot Arg {} is the incorrect length. Data: {}---".format(i, attrib))
+                continue
+            name = dtype[i][0]
+            edit.append((name, attrib))
 
         if filename:
             ret_values = parse_kivy.wav_File_Handler(filename, edit, new_name = rename)
@@ -639,10 +637,66 @@ class UserInput(BoxLayout):
 
 
 
-
-
-class Config(Screen):
+class Misc(BoxLayout):
     pass
+
+class StatsGrid(GridLayout):
+    sel_file_stats = StringProperty('')
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.create_stats()
+
+    def create_stats(self):
+        num_labels = 70 * 2
+        for i in range(num_labels):
+            label = Label(shorten=True)
+            label.bind(size=label.setter('text_size'))
+            self.add_widget(label)
+        self.get_stats()
+
+    def get_stats(self):
+        headers = [('RIFF', 'No File Selected'), ('File length - 8', 'No File Selected'),
+            ('WAVE', 'No File Selected'), ('fmt', 'No File Selected'), ('FMT Chunk size', 'No File Selected'),
+            ('Format Category', 'No File Selected'), ('Number of channels', 'No File Selected'),
+            ('Sampling Rate', 'No File Selected'), ('Avg bytes/sec', 'No File Selected'),
+            ('Data block size', 'No File Selected'), ('Format', 'No File Selected'),
+            ('White space', 'No File Selected'), ('scot', 'No File Selected'),
+            ('424 Constant', 'No File Selected'), ('Alter(scratchpad)', 'No File Selected'),
+            ('Attrib(scratchpad)', 'No File Selected'), ('Artnum(scratchpad)', 'No File Selected'),
+            ('Title', 'No File Selected'), ('ID', 'No File Selected'), ('Padding', 'No File Selected'),
+            ('Approx duration', 'No File Selected'), ('Cue-in (secs)', 'No File Selected'),
+            ('Cue-in (hundredths)', 'No File Selected'), ('Total Length (seconds)', 'No File Selected'),
+            ('Total Length (hundredths)', 'No File Selected'), ('Start Date', 'No File Selected'),
+            ('End date', 'No File Selected'), ('Start hour', 'No File Selected'),
+            ('End hour', 'No File Selected'), ('Digital', 'No File Selected'),
+            ('Sample Rate', 'No File Selected'), ('Mono/Stereo', 'No File Selected'),
+            ('Compress', 'No File Selected'), ('Eomstrt', 'No File Selected'),
+            ('EOM (Hundredths from end)', 'No File Selected'), ('Attrib2', 'No File Selected'),
+            ('Future', 'No File Selected'), ('catfontcolor', 'No File Selected'),
+            ('catcolor', 'No File Selected'), ('segeompos', 'No File Selected'),
+            ('vtstartsecs', 'No File Selected'), ('vtstarthunds', 'No File Selected'),
+            ('priorcat', 'No File Selected'), ('priorcopy', 'No File Selected'),
+            ('priorpadd', 'No File Selected'), ('postcat', 'No File Selected'),
+            ('postcopy', 'No File Selected'), ('postpadd', 'No File Selected'),
+            ('hrcanplay', 'No File Selected'), ('future', 'No File Selected'),
+            ('Artist', 'No File Selected'), ('Note', 'No File Selected'),
+            ('Intro', 'No File Selected'), ('End', 'No File Selected'),
+            ('Year', 'No File Selected'), ('Obsolete2', 'No File Selected'),
+            ('Hour Recorded', 'No File Selected'), ('Date Recorded', 'No File Selected'),
+            ('Mpegbitrate', 'No File Selected'), ('Pitch', 'No File Selected'),
+            ('playlevel', 'No File Selected'), ('lenvalid', 'No File Selected'),
+            ('filelength', 'No File Selected'), ('desiredlen', 'No File Selected'),
+            ('triggers[4]', 'No File Selected'), ('fillout', 'No File Selected'),
+            ('fact', 'No File Selected'), ('4????', 'No File Selected'),
+            ('Number of Audio Samples', 'No File Selected'), ('Data', 'No File Selected'),
+            ('file length - 512', 'No File Selected')]
+        print("hello")
+        if self.sel_file_stats:
+            print("pass")
+            headers = parse_kivy.getWavInfo(self.sel_file_stats)
+        for i, label in enumerate(reversed(self.children)):
+            label.text = str(headers[i // 2][ i % 2 ])
 
 class ss32App(App):
 

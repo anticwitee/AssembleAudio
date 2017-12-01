@@ -76,8 +76,8 @@ def editScottWav(file_name, edit, new_name = ''):
     from os import rename
     from os.path import dirname, isfile, join
 
-    addr = {"title" : 72, "year" : 406, "artist" : 335, "end" : 405,
-            "note" : 369, "intro" : 403, "eom" : 152, "s_date" : 133,
+    addr = {"note" : 369, "title" : 72, "artist" : 335, "year" : 406, "audio_id" : 115,
+            "end" : 405, "intro" : 403, "eom" : 152, "s_date" : 133,
             "e_date" : 139, "s_hour" : 145, "e_hour": 146}
 
     temp_is_scott = False
@@ -378,7 +378,14 @@ def info(file_name):
 
 
 
-def getWavInfo(filename, format_hex = False):
+def printWavInfo(filename, format_hex = False):
+    headers = getWavInfo(filename)
+    for header in headers:
+        name, data = header[0], header[1]
+        print("%-25s: %s" % (name, data))
+
+
+def getWavInfo(filename):
     #Prints out the header in the format
     # Name: Data
     #Tuple is: Name, Size, True/False for Int
@@ -419,26 +426,28 @@ def getWavInfo(filename, format_hex = False):
             ['Number of Audio Samples', 4, True], ['Data', 4, False],
             ['file length - 512', 4, True])
 
+
+    header_list = []
     try:
         with open(filename, 'rb') as wav_file:
             for header in header_data:
                 data = wav_file.read(header[1])
-                if not format_hex:
-                    if header[2]:
-                        try:
-                            data = int.from_bytes(data, byteorder='little')
-                        except TypeError:
-                            print("---getWavInfo should've got an Int.---")
-                    else:
-                        try:
-                            data = data.decode("ascii")
-                        except UnicodeDecodeError:
-                            print("---getWavInfo should've got an ASCII decodeable seq.---")
-
-                print("%-25s: %s" % (header[0], data))
+                if header[2]:
+                    try:
+                        data = int.from_bytes(data, byteorder='little')
+                    except TypeError:
+                        data = "---getWavInfo should've got an Int.---"
+                else:
+                    try:
+                        data = data.decode("utf-8")
+                    except UnicodeDecodeError:
+                        data = "---getWavInfo should've got an UTF-8 decodeable seq.---"
+                header_list.append((header[0], data))
 
     except IOError:
         print("---getWavInfo couldn't open file {}---".format(filename))
+    return header_list
+
 
 def simpleReWrite(source, dst):
 

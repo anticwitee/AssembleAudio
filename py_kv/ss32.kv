@@ -85,7 +85,7 @@ RootScreen:
             on_press: screen_manager.current = 'edit'
         FreqButtons:
             text: "--->"
-            on_press: screen_manager.current = 'network'
+            on_press: screen_manager.current = 'stats'
 
     ScreenManager:
         id: screen_manager
@@ -112,10 +112,6 @@ RootScreen:
                         Rectangle:
                             pos: self.pos
                             size: self.size
-                    # Button:
-                    #     background_color: medium_grey
-                    #     background_normal: ""
-                    #     text: "Files/Directories"
                     BoxLayout:
                         orientation: 'vertical'
                         NetworkQueueHeader:
@@ -166,8 +162,25 @@ RootScreen:
                         path_name: file_grid._sel_file
                         editing_grid: file_grid
         Screen:
-            name: 'network'
-            Config
+            name: 'stats'
+            BoxLayout:
+                orientation: 'vertical'
+                Misc:
+                    size_hint_y: 0.2
+                    Slider:
+                        min: 1
+                        max: 100
+                        value: 12
+                        step: 1
+                        on_touch_move: for widget in stat_grid.children: widget.font_size = self.value
+                    Button:
+                        text: "Get selected file stats."
+                        on_press: stat_grid.get_stats()
+                StatsGrid:
+                    id: stat_grid
+                    sel_file_stats: file_grid._sel_file
+                    cols: 4
+                    size_hint_y: 0.8
 
     BoxLayout:
         size_hint_y: 0.025
@@ -303,6 +316,10 @@ RootScreen:
                 input_filter: lambda text, from_undo: text[:34 - len(self.text)]
         BoxLayout:
             TabText:
+                id: audio_id
+                hint_text: "ID"
+                input_filter: lambda text, from_undo: text[:4 - len(self.text)]
+            TabText:
                 id: yr
                 hint_text: "Year"
                 input_filter: lambda text, from_undo: text[:4 - len(self.text)]
@@ -381,92 +398,10 @@ RootScreen:
             width: 100
             background_color: deep_blue
             background_normal: ""
-            on_press: root.edit_scot(root.path_name, title.text, yr.text, artist.text, ending.text, note.text, intro.text, eom.text, s_date.text, e_date.text, s_hour.text, e_hour.text, rename = rename.text)
+            on_press: root.edit_scot(root.path_name, note.text, title.text, artist.text, audio_id.text, year.text, ending.text, intro.text, eom.text, s_date.text, e_date.text, s_hour.text, e_hour.text, rename = rename.text)
 
 
-<Config>:
-    BoxLayout:
-        orientation: 'vertical'
-        BoxLayout:
-            orientation: 'vertical'
-            Label:
-                text: "Network IP Addr:"
-            TextInput:
-                hint_text: "192.168.1.1"
-            Label:
-                text: "Font size"
-            Slider:
-                min: 1
-                max: 100
-                value: 12
-                step: 1
-                on_touch_move: for widget in test_area.children: widget.font_size = self.value
-            Label:
-                text: "Size hint X"
-            Slider:
-                min: 0
-                max: 1
-                value: 1
-                step: 0.1
-                on_touch_move: for widget in test_area.children: widget.size_hint_x = self.value
-            Label:
-                text: "Size hint Y"
-            Slider:
-                min: 0
-                max: 1
-                value: 1
-                step: 0.1
-                on_touch_move: for widget in test_area.children: widget.size_hint_y = self.value
-
-
-        GridLayout:
-            id: test_area
-            cols: 4
-            Label:
-                text: "File Type"
-            Label:
-                text: "Stat2"
-            Label:
-                text: "File Length"
-            Label:
-                text: "Stat4"
-            Label:
-                text: "Number of channels"
-            Label:
-                text: "Stat2"
-            Label:
-                text: "Sampling rate"
-            Label:
-                text: "Stat4"
-            Label:
-                text: "PCM"
-            Label:
-                text: "Stat2"
-            Label:
-                text: "Scot"
-            Label:
-                text: "Stat4"
-            Label:
-                text: "Title"
-            Label:
-                text: "Stat2"
-            Label:
-                text: "ID"
-            Label:
-                text: "Stat4"
-            Label:
-                text: "Start hour"
-            Label:
-                text: "Stat2"
-            Label:
-                text: "End hour"
-            Label:
-                text: "Stat4"
-            Label:
-                text: "Start date"
-            Label:
-                text: "Stat2"
-            Label:
-                text: "End date"
-            Label:
-                text: "Stat4"
+<Misc>:
+    orientation: 'vertical'
+    Label:
+        text: "Font size"
