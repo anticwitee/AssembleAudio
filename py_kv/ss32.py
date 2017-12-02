@@ -591,10 +591,10 @@ class UserInput(BoxLayout):
         #and added to an "edit" list. The edit list is then passed onto a
         #function that writes the actual bytes to the file.
 
-        valid_len = (43, 4, 34, 1, 34, 2, 6, 6, 6, 1, 1)
-        dtype = [("note", "str") , ("title", "str"), ("artist" ,"str"),
+        valid_len = (34, 43, 34, 4, 4, 1, 2, 6, 6, 6, 1, 1)
+        dtype = [("note", "str"), ("title", "str"), ("artist" ,"str"),
                  ("audio_id", "str"), ("year", "str"), ("end", "str"),
-                 ("intro", "str"), ("eom", "int") ("s_date", "str"), ("e_date", "str"),
+                 ("intro", "str"), ("eom", "int"), ("s_date", "str"), ("e_date", "str"),
                  ("s_hour", "str"), ("e_hour", "str")]
 
 
