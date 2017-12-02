@@ -82,9 +82,11 @@ def renameScott(filename, new_name, overwrite=False, add_dirname=True):
 def editScottWav(filename, edit):
     #Edits the scott file 'filename', optionally re-naming
     #the file.
-    addr = {"note" : 369, "title" : 72, "artist" : 335, "year" : 406, "audio_id" : 115,
-            "end" : 405, "intro" : 403, "eom" : 152, "s_date" : 133,
-            "e_date" : 139, "s_hour" : 145, "e_hour": 146}
+    addr = {
+        "note" : 369, "title" : 72, "artist" : 335, "audio_id" : 115,
+        "year" : 406, "end" : 405, "intro" : 403, "eom" : 152,
+        "s_date" : 133, "e_date" : 139, "s_hour" : 145, "e_hour": 146
+        }
 
     try:
         with open(filename, 'rb+') as f:
@@ -361,6 +363,38 @@ def info(filename, step=4, stop=512):
     except IOError:
         print("---Info: File {0} cannot be opened.".format(filename))
 
+
+def info_from_file(filename, info_items):
+    #info-items is an ordered sequence of
+    #keys which correspond to the data you want.
+
+    title_to_addr = {
+        'note': (369, 34, 'str'), 'title': (72, 43, 'str'), 'artist': (335, 34, 'str'),
+        'audio_id': (115, 4, 'str'), 'year': (406, 4, 'str'), 'end': (405, 1, 'str'),
+        'intro': (403, 2, 'str'), 'eom': (152, 6, 'int'), 's_date': (133, 6, 'str'),
+        }
+
+    data_to_write = []
+    try:
+        with open(filename, 'rb') as f:
+            for item in info_items:
+                f.seek(title_to_addr[item][0])
+                if title_to_addr[item][2] == 'str':
+                    try:
+                        item = f.read(title_to_addr[item][1]).decode('utf-8')
+                    except UnicodeDecodeError:
+                        item = 'None'
+                else:
+                    try:
+                        raw_bytes = f.read(title_to_addr[item][1])
+                        item = int.from_bytes(raw_bytes, byteorder='little')
+                    except TypeError:
+                        item = 'None'
+
+                data_to_write.append(item)
+        return data_to_write
+    except IOError:
+        print("--- info_from_file: Can't open file", filename)
 
 
 def printWavInfo(filename, format_hex = False):

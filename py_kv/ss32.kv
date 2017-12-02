@@ -153,17 +153,29 @@ RootScreen:
                             EditingGrid:
                                 id: file_grid
                                 network_queue: network_grid
+                                user_input: usr_input
                                 spacing: 1
                                 size_hint_y: None
                                 height: self.minimum_height
                         EditingGridCommands:
                             size_hint_y: 0.1
                             editing_grid: file_grid
-                    UserInput:
-                        path_name: file_grid._sel_file
-                        editing_grid: file_grid
-                        network_queue: network_grid
+                    FileManipulation:
                         size_hint_y: 0.4
+                        UserInput:
+                            id: usr_input
+                            editing_grid: file_grid
+                            network_queue: network_grid
+                            size_hint_y: 0.85
+                            orientation: 'vertical'
+
+                        PlayBack:
+                            id: playback
+                            path_name: file_grid._sel_file
+                            user_input: usr_input
+                            size_hint_y: 0.15
+                            cols: 4
+                            spacing: 10
 
         Screen:
             name: 'stats'
@@ -290,7 +302,7 @@ RootScreen:
                 on_release: root.load(filechooser.path, filechooser.selection)
 
 
-<UserInput>:
+<FileManipulation>:
     orientation: 'vertical'
     canvas.before:
         Color:
@@ -298,111 +310,107 @@ RootScreen:
         Rectangle:
             pos: self.pos
             size: self.size
+
+<UserInput>:
     BoxLayout:
-        size_hint_y: 0.85
-        orientation: 'vertical'
-        BoxLayout:
-            TabText:
-                id: rename
-                hint_text: "Enter filename here."
-            TabText:
-                id: note
-                hint_text: "Note"
-                input_filter: lambda text, from_undo: text[:34 - len(self.text)]
-        BoxLayout:
-            TabText:
-                id: title
-                hint_text: "Title"
-                input_filter: lambda text, from_undo: text[:43 - len(self.text)]
-            TabText:
-                id: artist
-                hint_text: "Artist"
-                input_filter: lambda text, from_undo: text[:34 - len(self.text)]
-        BoxLayout:
-            TabText:
-                id: audio_id
-                hint_text: "ID"
-                input_filter: lambda text, from_undo: text[:4 - len(self.text)]
-            TabText:
-                id: year
-                hint_text: "Year"
-                input_filter: lambda text, from_undo: text[:4 - len(self.text)]
-            TabText:
-                id: ending
-                hint_text: "Ending"
-                input_filter: lambda text, from_undo: text[:1 - len(self.text)]
-            TabText:
-                id: intro
-                hint_text: "Intro"
-                input_filter: lambda text, from_undo: text[:2 - len(self.text)]
-            TabText:
-                id: eom
-                hint_text: "EOM"
-                input_filter: lambda text, from_undo: text[:6 - len(self.text)]
+        TabText:
+            id: rename
+            hint_text: "Enter filename here."
+        TabText:
+            id: note
+            hint_text: "Note"
+            input_filter: lambda text, from_undo: text[:34 - len(self.text)]
+    BoxLayout:
+        TabText:
+            id: title
+            hint_text: "Title"
+            input_filter: lambda text, from_undo: text[:43 - len(self.text)]
+        TabText:
+            id: artist
+            hint_text: "Artist"
+            input_filter: lambda text, from_undo: text[:34 - len(self.text)]
+    BoxLayout:
+        TabText:
+            id: audio_id
+            hint_text: "ID"
+            input_filter: lambda text, from_undo: text[:4 - len(self.text)]
+        TabText:
+            id: year
+            hint_text: "Year"
+            input_filter: lambda text, from_undo: text[:4 - len(self.text)]
+        TabText:
+            id: ending
+            hint_text: "Ending"
+            input_filter: lambda text, from_undo: text[:1 - len(self.text)]
+        TabText:
+            id: intro
+            hint_text: "Intro"
+            input_filter: lambda text, from_undo: text[:2 - len(self.text)]
+        TabText:
+            id: eom
+            hint_text: "EOM"
+            input_filter: lambda text, from_undo: text[:6 - len(self.text)]
 
-        BoxLayout:
-            TabText:
-                id: s_date
-                hint_text: "Start Date"
-                input_filter: lambda text, from_undo: text[:6 - len(self.text)]
+    BoxLayout:
+        TabText:
+            id: s_date
+            hint_text: "Start Date"
+            input_filter: lambda text, from_undo: text[:6 - len(self.text)]
 
-            TabText:
-                id: s_hour
-                hint_text: "Start Hour"
-                input_filter: lambda text, from_undo: text[:1 - len(self.text)]
-            TabText:
-                hint_text: "Beginning of Audio"
+        TabText:
+            id: s_hour
+            hint_text: "Start Hour"
+            input_filter: lambda text, from_undo: text[:1 - len(self.text)]
+        TabText:
+            hint_text: "Beginning of Audio"
+    BoxLayout:
+        TabText:
+            id: e_date
+            hint_text: "End Date"
+            input_filter: lambda text, from_undo: text[:6 - len(self.text)]
+        TabText:
+            id: e_hour
+            hint_text: "End Hour"
+            input_filter: lambda text, from_undo: text[:1 - len(self.text)]
+        TabText:
+            hint_text: "End of Audio"
 
-        BoxLayout:
-            TabText:
-                id: e_date
-                hint_text: "End Date"
-                input_filter: lambda text, from_undo: text[:6 - len(self.text)]
-            TabText:
-                id: e_hour
-                hint_text: "End Hour"
-                input_filter: lambda text, from_undo: text[:1 - len(self.text)]
-            TabText:
-                hint_text: "End of Audio"
-    GridLayout:
-        size_hint_y: 0.15
-        canvas.before:
-            Color:
-                rgba: cloudy
-            Rectangle:
-                pos: self.pos
-                size: self.size
+<PlayBack>:
+    canvas.before:
+        Color:
+            rgba: cloudy
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    Button:
+        size_hint_x: None
+        width: 100
+        text: "Play"
+        background_color: deep_blue
+        background_normal: ""
+        on_press: root.play(root.path_name)
+    ProgressBar:
+        id: p_bar
+        value: 0
+    Slider:
+        size_hint_x: None
+        width: 100
+        id: volume_slider
+        min: 0
+        max: 1
+        value: 1
+        step: 0.01
+        value_track: True
+        value_track_color: 0, 1, 1, 1
+        on_touch_move: root.update_volume(self.value)
 
-        cols: 4
-        spacing: 10
-        Button:
-            size_hint_x: None
-            width: 100
-            text: "Play"
-            background_color: deep_blue
-            background_normal: ""
-            on_press: root.play(root.path_name)
-        ProgressBar:
-            id: p_bar
-            value: 0
-        Slider:
-            size_hint_x: None
-            width: 100
-            id: volume_slider
-            min: 0
-            max: 1
-            value: 1
-            step: 0.01
-            value_track: True
-            value_track_color: 0, 1, 1, 1
-            on_touch_move: root.update_volume(self.value)
-        Button:
-            text: "Save"
-            size_hint_x: None
-            width: 100
-            background_color: deep_blue
-            background_normal: ""
-            on_press: root.modify_file(root.path_name, [note.text, title.text, artist.text, audio_id.text, year.text, ending.text, intro.text, eom.text, s_date.text, e_date.text, s_hour.text, e_hour.text], rename = rename.text)
+    Button:
+        text: "Save"
+        size_hint_x: None
+        width: 100
+        background_color: deep_blue
+        background_normal: ""
+        on_press: root.notify_usr_input()
 
 
 <Misc>:

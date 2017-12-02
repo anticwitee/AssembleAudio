@@ -22,6 +22,8 @@ from kivy.clock import Clock
 import parse_kivy
 
 
+from os.path import basename, splitext
+
 #widget.walk(restrict=True)
 
 
@@ -91,7 +93,6 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
         self._sel_file = ''
         self._sel_start = None
         self._sel_end = None
-
 
 
     def button_press(self, button, touch):
@@ -176,7 +177,7 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
 
     def edit_row(self, index, data_to_write):
         if len(data_to_write) != self.cols:
-            print("--Edit Row:  Data mismatch error.")
+            print('--Edit Row:  Data mismatch error.')
             popup = Popup(title='Grid Error 01',
                     content=Label(text = 'There was a problem in updating the grid.'),
                     size_hint = (0.3, 0.3))
@@ -196,7 +197,7 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
         #and indicate the files that are loaded with their metadata.
 
         if len(data_to_write) != self.cols:
-            print("--Set info:  Data mismatch error.")
+            print('--Set info:  Data mismatch error.')
             popup = Popup(title='Grid Error 02',
                     content=Label(text = 'There was a problem in updating the grid.'),
                     size_hint = (0.3, 0.3))
@@ -254,14 +255,19 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
         length = '{} {}'.format('Grid of size:', len(self.children))
         return '{}'.format(length)
 
+
 class RootScreen(BoxLayout):
     pass
+
 
 class TopMenu(BoxLayout):
     pass
 
+
 class Frequent(BoxLayout):
     pass
+
+
 
 class NetworkQueueHeader(BoxLayout):
     def __init__(self, **kwargs):
@@ -275,6 +281,8 @@ class NetworkQueueHeader(BoxLayout):
             label = Label(text = col_names[col], size_hint_y = None, height = 30,
                         size_hint_x = x_hint_list[col], bold = True)
             self.add_widget(label)
+
+
 
 class NetworkQueueScroll(ScrollView):
     pass
@@ -294,13 +302,11 @@ class NetworkQueue(GridLayout, GridOfButtons):
     #FileChooserMethods
     def show_load(self):
         content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
-        self._popup = Popup(title="Load file", content=content,
+        self._popup = Popup(title='Load file', content=content,
                             size_hint=(0.75, 0.75))
         self._popup.open()
 
     def load(self, path, filenames):
-        from os.path import basename
-
         print(path, filenames)
         for filename in filenames:
             data_to_write = [basename(filename), filename]
@@ -330,7 +336,6 @@ class NetworkCommands(BoxLayout):
             pass
 
         def display_log(self):
-            #this is getting triggered multiple times for some reason
             popup = Popup(title='Network Log',
                     content=Label(text = 'Log is not implemented yet.'),
                     size_hint = (0.3, 0.3))
@@ -351,6 +356,8 @@ class EditingGridHeader(BoxLayout):
                         size_hint_x = x_hint_list[col], bold = True)
             self.add_widget(label)
 
+
+
 class EditingGridScroll(ScrollView):
     pass
 
@@ -358,8 +365,11 @@ class EditingGridScroll(ScrollView):
 class EditingGrid(GridLayout, GridOfButtons):
 
     network_queue = ObjectProperty(None)
+    user_input = ObjectProperty(None)
     _sel_file = StringProperty('')
+
     x_hint_list = [0.05, 0.15, 0.15, 0.075, 0.20, 0.075, 0.3]
+    info_items = ['audio_id', 'title', 'artist', 'e_date']
 
     def __init__(self, **kwargs):
         super(EditingGrid, self).__init__(**kwargs)
@@ -367,9 +377,9 @@ class EditingGrid(GridLayout, GridOfButtons):
         Window.bind(on_dropfile=self.file_drop)
 
 
-    # def grid_touch_actions(self, child, touch):
-    #     super().grid_touch_actions(self, child, touch)
-
+    def grid_touch_actions(self, child, touch):
+        super().grid_touch_actions(child, touch)
+        self.user_input.fill_text_inputs(self._sel_file)
 
 
     def file_drop(self, window, path_in_bytes):
@@ -378,7 +388,7 @@ class EditingGrid(GridLayout, GridOfButtons):
         list_of_files = [a_path]
         if isdir(a_path):
             list_of_files = self.files_from_directory(a_path)
-        self.load("Dropped files", list_of_files)
+        self.load('Dropped files', list_of_files)
 
 
     def files_from_directory(self, directory, depth = cfg_recur_depth):
@@ -401,56 +411,21 @@ class EditingGrid(GridLayout, GridOfButtons):
     #FileChooserMethods
     def show_load(self):
         content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
-        self._popup = Popup(title="Load file", content=content,
+        self._popup = Popup(title='Load file', content=content,
                             size_hint=(0.75, 0.75))
         self._popup.open()
 
-    def info_from_file(self, filename):
-        from os.path import basename, splitext
-        try:
-            with open(filename, 'rb') as f:
-                f.seek(72)
-                try:
-                    title = f.read(43).decode("utf-8")
-                except UnicodeDecodeError:
-                    title = "None"
-
-                try:
-                    id_num = f.read(4).decode("utf-8")
-                except UnicodeDecodeError:
-                    id_num = "None"
-
-                f.seek(139)
-                try:
-                    end_date = f.read(6).decode("utf-8")
-                except UnicodeDecodeError:
-                    end_date = "None"
-
-                f.seek(335)
-                try:
-                    artist = f.read(34).decode("utf-8")
-                except UnicodeDecodeError:
-                    artist = "None"
-            data_to_write = [id_num, title, artist, end_date, basename(filename), splitext(filename)[1], filename]
-            return data_to_write
-
-        except IOError:
-            print("--info_from_file-- Cannot find file {}".format(filename))
-            popup = Popup(title='File Error',
-                    content=Label(text = 'Cannot find file {}'.format(filename)),
-                    size_hint = (0.3, 0.3))
-            popup.open()
 
     def load(self, path, filenames):
-        #Should check file type first.
-        print("Path: ", path)
-        print("Filenames: ", filenames)
+        print('Path: ', path)
+        print('Filenames: ', filenames)
 
         for filename in filenames:
-            data = self.info_from_file(filename)
+            data = parse_kivy.info_from_file(filename, EditingGrid.info_items)
             if data:
+                data.extend([basename(filename), splitext(filename)[1], filename])
                 self.set_info(data)
-        if path != "Dropped files":
+        if path != 'Dropped files':
             self.dismiss_popup()
 
 
@@ -491,16 +466,32 @@ class LoadDialog(FloatLayout):
 
 
 
+class FileManipulation(BoxLayout):
+    pass
+
 class UserInput(BoxLayout):
-    path_name = StringProperty('')
+
     editing_grid = ObjectProperty(None)
     network_queue = ObjectProperty(None)
+    info_items = [
+        'e_hour', 'e_date', 's_hour', 's_date', 'eom', 'intro',
+        'end', 'year', 'audio_id', 'artist', 'title', 'note'
+        ]
 
-    def __init__(self, **kwargs):
-        super(UserInput, self).__init__(**kwargs)
-        self._sound = None
-        self._sound_pos = None
-        self._update_bar_schedule = None
+    def fill_text_inputs(self, filename):
+        if filename:
+            #Update the TextInputs to represent current-data.
+            data = ['99:99:99']
+            data.extend(parse_kivy.info_from_file(filename, self.info_items))
+            data.append(basename(filename))
+            data.insert(3, '00:00:00')
+        else:
+            data = ['' for i in range(15)]
+        counter = 0
+        for box_layout in self.children:
+            for text_input in box_layout.children:
+                text_input.text = str(data[counter]).strip()
+                counter += 1
 
 
     # def overwrite_popup(self, path):
@@ -529,6 +520,108 @@ class UserInput(BoxLayout):
     # def overwrite_ans(self, popup, value):
     #     popup.dismiss()
     #     return value
+
+
+
+    def modify_file(self, filename, user_data, rename=''):
+        #Sanitise the input. Then call a handler to deal with
+        #the specific file. Then update the grid to reflect changes.
+        if filename:
+            edit = self.probe_text_inputs(user_data)
+            final_filename = filename
+            if rename != basename(filename):
+                result = parse_kivy.renameScott(filename, rename)
+                if result == 'owrite':
+                    print('owrite')
+                    #popup to ask user if they want to overwrite
+                else:
+                    final_filename = result
+
+            parse_kivy.wavFileHandler(final_filename, edit)
+            #Update the EditingGrid to display accurate info
+            index = GridOfButtons.get_row_index(self.editing_grid, filename)
+            data = parse_kivy.info_from_file(final_filename, EditingGrid.info_items)
+            if data and index is not None:
+                data.extend([basename(final_filename), splitext(final_filename)[1], final_filename])
+                GridOfButtons.edit_row(self.editing_grid, index, data)
+
+            #Update the network queue
+            self.network_queue.load('auto-add', [final_filename])
+        else:
+            error_msg = 'No file selected.'
+            popup = Popup(title='Conversion/Editing Error.',
+                    content=Label(text= error_msg),
+                    size_hint = (0.3, 0.3))
+            popup.open()
+
+
+    def process_text_inputs(self):
+        user_data_raw = []
+        for box_layout in self.children:
+            for text_input in box_layout.children:
+                user_data_raw.append(text_input.text)
+
+        new_name = user_data_raw.pop()
+        user_data = []
+        for i in range(len(user_data_raw)):
+            header = user_data_raw.pop()
+            #Temporary
+            if i != 10 and i != 13:
+                user_data.append(header)
+        self.modify_file(self.editing_grid._sel_file, user_data, rename=new_name)
+
+
+    def probe_text_inputs(self, user_data):
+        #Takes the list of info from the user. If they are the correct
+        #length, then they will be converted to the appropriate data type
+        #and added to an 'edit' list.
+
+        #should add namedTuples
+        # (name, data_type, length)
+        field_info = [
+            ('note', 'str', 34), ('title', 'str', 43), ('artist', 'str', 34),
+            ('audio_id', 'str', 4), ('year', 'str', 4), ('end', 'str', 1),
+            ('intro', 'str', 2), ('eom', 'int', 6), ('s_date', 'str', 6),
+            ('s_hour', 'int', 1), ('e_date', 'str', 6), ('e_hour', 'int', 1)
+        ]
+
+
+        edit = []
+        for i, attrib in enumerate(user_data):
+            if len(attrib) == field_info[i][2]:
+                if field_info[i][1] == 'int' and isinstance(attrib, int):
+                    attrib = int(attrib)
+                elif not field_info[i][1] == 'str':
+                    print('---probe_text_inputs Arg {} should be an int. Data: {}.---'.format(i, attrib))
+            elif i < 3 and attrib:
+                attrib += ' ' * (field_info[i][2] - len(attrib))
+            elif attrib:
+                print('---probe_text_inputs---')
+                print('{} is the incorrect length. Data: {}---'.format(field_info[i][0], attrib))
+                print(len(attrib), field_info[i][2], attrib)
+                print(user_data)
+                continue
+            name = field_info[i][0]
+            edit.append((name, attrib))
+        return edit
+
+
+
+class PlayBack(GridLayout):
+
+    path_name = StringProperty('')
+    user_input = ObjectProperty(None)
+
+    def __init__(self, **kwargs):
+        super(PlayBack, self).__init__(**kwargs)
+        self._sound = None
+        self._sound_pos = None
+        self._update_bar_schedule = None
+
+
+    def notify_usr_input(self):
+        self.user_input.process_text_inputs()
+
 
     def update_volume(self, volume):
         if self._sound:
@@ -564,7 +657,7 @@ class UserInput(BoxLayout):
         if not self._sound:
             self.load_audio_file(path)
         elif self._sound.source == path:
-            if self._sound.state == "play":
+            if self._sound.state == 'play':
                 self.pause()
             else:
                 self.resume()
@@ -595,79 +688,12 @@ class UserInput(BoxLayout):
             sound.volume = self.ids.volume_slider.value
             sound.play()
         else:
-            print("Cannot play the file %s." % path)
+            print('Cannot play the file %s.' % path)
             error_msg = 'Cannot play the file %s.' % (path) if path else 'No file selected.'
             popup = Popup(title='Audio Error.',
                     content=Label(text= error_msg),
                     size_hint = (0.3, 0.3))
             popup.open()
-
-
-    def modify_file(self, filename, user_data, rename=''):
-        #Sanitise the input. Then call a handler to deal with
-        #the specific file. Then update the grid to reflect changes.
-        if filename:
-            edit = self.probe_text_input(user_data)
-            final_filename = filename
-            if rename:
-                result = parse_kivy.renameScott(filename, rename)
-                if result == 'owrite':
-                    print('owrite')
-                    # #popup to ask user if they want to overwrite
-                    # do_overwrite = self.overwrite_popup(rename)
-                    # print(do_overwrite)
-                    # #if yes: final_filename = parse_kivy.renameScott(filename, rename, overwrite=True)
-                    # #elif no: do nothing
-                else:
-                    final_filename = result
-
-            parse_kivy.wavFileHandler(final_filename, edit)
-            #Update the EditingGrid to display accurate info
-            index = GridOfButtons.get_row_index(self.editing_grid, filename)
-            data = EditingGrid.info_from_file(self, final_filename)
-            if data and index is not None:
-                GridOfButtons.edit_row(self.editing_grid, index, data)
-
-            #Update the network queue
-            self.network_queue.load('auto-add', [final_filename])
-        else:
-            error_msg = 'No file selected.'
-            popup = Popup(title='Conversion/Editing Error.',
-                    content=Label(text= error_msg),
-                    size_hint = (0.3, 0.3))
-            popup.open()
-
-
-    def probe_text_input(self, user_data):
-        #Takes the list of info from the user. If they are the correct
-        #length, then they will be converted to the appropriate data type
-        #and added to an "edit" list.
-
-        #should add namedTuples
-        # (name, data_type, length)
-        field_info = [
-            ('note', 'str', 34), ('title', 'str', 43), ('artist', 'str', 34),
-            ('audio_id', 'str', 4), ('year', 'str', 4), ('end', 'str', 1),
-            ('intro', 'str', 2), ('eom', 'int', 6), ('s_date', 'str', 6),
-            ('e_date', 'str', 6), ('s_hour', 'int', 1), ('e_hour', 'int', 1)
-        ]
-
-
-        edit = []
-        for i, attrib in enumerate(user_data):
-            if len(attrib) == field_info[i][2]:
-                if field_info[i][1] == 'int' and isinstance(attrib, int):
-                    attrib = int(attrib)
-                elif not field_info[i][1] == 'str':
-                    print("---probe_text_input Arg {} should be an int. Data: {}.---".format(i, attrib))
-            elif i < 3 and attrib:
-                attrib += " " * (field_info[i][2] - len(attrib))
-            elif attrib:
-                print("---probe_text_input Arg {} is the incorrect length. Data: {}---".format(i, attrib))
-                continue
-            name = field_info[i][0]
-            edit.append((name, attrib))
-        return edit
 
 
 
