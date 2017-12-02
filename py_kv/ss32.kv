@@ -128,6 +128,7 @@ RootScreen:
                             bar_width: 10
                             scroll_type: ['bars']
                             NetworkQueue:
+                                id: network_grid
                                 spacing: 1
                                 cols: 2
                                 size_hint_y: None
@@ -150,17 +151,20 @@ RootScreen:
                             bar_width: 10
                             scroll_type: ['bars']
                             EditingGrid:
-                                spacing: 1
                                 id: file_grid
+                                network_queue: network_grid
+                                spacing: 1
                                 size_hint_y: None
                                 height: self.minimum_height
                         EditingGridCommands:
                             size_hint_y: 0.1
                             editing_grid: file_grid
                     UserInput:
-                        size_hint_y: 0.4
                         path_name: file_grid._sel_file
                         editing_grid: file_grid
+                        network_queue: network_grid
+                        size_hint_y: 0.4
+
         Screen:
             name: 'stats'
             BoxLayout:

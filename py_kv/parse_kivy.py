@@ -74,8 +74,8 @@ def renameScott(filename, new_name, overwrite=False, add_dirname=True):
             final_filename = new_name
     except IOError:
         print("---renameScott Cannot rename {} to {}.---".format(filename, new_name))
-    finally:
-        return final_filename
+
+    return final_filename
 
 
 

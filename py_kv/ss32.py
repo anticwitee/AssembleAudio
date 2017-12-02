@@ -88,7 +88,7 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
 
     def __init__(self):
         self._avail = 0
-        self._sel_file = ""
+        self._sel_file = ''
         self._sel_start = None
         self._sel_end = None
 
@@ -127,6 +127,7 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
         return self.iterate_row()
 
     def clear_grid(self):
+        self._sel_file = ''
         for widget in self.children:
             widget.text = ''
         self._avail = len(self.children) // self.cols
@@ -287,7 +288,6 @@ class NetworkQueue(GridLayout, GridOfButtons):
         super(NetworkQueue, self).__init__(**kwargs)
         self.create_grid(NetworkQueue.x_hint_list, 35)
 
-
     def set_info(self, data_to_write):
         GridOfButtons.set_info(self, data_to_write, NetworkQueue.x_hint_list)
 
@@ -306,7 +306,8 @@ class NetworkQueue(GridLayout, GridOfButtons):
             data_to_write = [basename(filename), filename]
             self.set_info(data_to_write)
 
-        self.dismiss_popup()
+        if path != 'auto-add':
+            self.dismiss_popup()
 
     def dismiss_popup(self):
         self._popup.dismiss()
@@ -326,29 +327,7 @@ class NetworkCommands(BoxLayout):
             self.send_files(pathnames)
 
         def send_files(self, pathnames):
-            #Should the validation be elsewhere....
-            from ftplib import FTP
-            from os.path import basename
-
-
-            for pathname in pathnames:
-                #replace with "if file exists"
-                if pathname:
-                    ip = ""
-                    #Need to implement a way to set IP
-                    if ip:
-                        ftp = FTP(ip)
-                        ftp.login()
-                        print("PWD:", ftp.pwd())
-                        print(ftp.getwelcome())
-
-                        #store files
-                        for pathname in pathnames:
-                            filename = basename(pathname)
-                            try:
-                                ftp.storbinary('STOR ' + filename, open(filename, 'rb'))
-                            except IOError:
-                                print('---send_files cannot send open {}.---'.format(pathname))
+            pass
 
         def display_log(self):
             #this is getting triggered multiple times for some reason
@@ -378,6 +357,7 @@ class EditingGridScroll(ScrollView):
 
 class EditingGrid(GridLayout, GridOfButtons):
 
+    network_queue = ObjectProperty(None)
     _sel_file = StringProperty('')
     x_hint_list = [0.05, 0.15, 0.15, 0.075, 0.20, 0.075, 0.3]
 
@@ -387,6 +367,11 @@ class EditingGrid(GridLayout, GridOfButtons):
         Window.bind(on_dropfile=self.file_drop)
 
 
+    # def grid_touch_actions(self, child, touch):
+    #     super().grid_touch_actions(self, child, touch)
+
+
+
     def file_drop(self, window, path_in_bytes):
         from os.path import isdir
         a_path = path_in_bytes.decode('utf-8')
@@ -394,6 +379,7 @@ class EditingGrid(GridLayout, GridOfButtons):
         if isdir(a_path):
             list_of_files = self.files_from_directory(a_path)
         self.load("Dropped files", list_of_files)
+
 
     def files_from_directory(self, directory, depth = cfg_recur_depth):
         from os import listdir
@@ -508,12 +494,41 @@ class LoadDialog(FloatLayout):
 class UserInput(BoxLayout):
     path_name = StringProperty('')
     editing_grid = ObjectProperty(None)
+    network_queue = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super(UserInput, self).__init__(**kwargs)
         self._sound = None
         self._sound_pos = None
         self._update_bar_schedule = None
+
+
+    # def overwrite_popup(self, path):
+    #     box = BoxLayout(orientation='vertical')
+    #     lab = Label(
+    #         text='File {} already exists. Do you want to overwrite it?'.format(path),
+    #         size_hint_y=0.7
+    #         )
+    #     button1 = Button(text='Yes')
+    #     button2 = Button(text='No')
+    #     box_inside = BoxLayout(size_hint_y=0.3)
+    #     box_inside.add_widget(button1)
+    #     box_inside.add_widget(button2)
+    #     box.add_widget(lab)
+    #     box.add_widget(box_inside)
+    #     content = box
+    #
+    #     popup = Popup(title='File already exists.',
+    #                 content=content,
+    #                 size_hint=(0.4, 0.4))
+    #
+    #     button1.bind(on_press=lambda x: self.overwrite_ans(popup, 'yes'))
+    #     button2.bind(on_press=lambda x: self.overwrite_ans(popup, 'no'))
+    #     popup.open()
+    #
+    # def overwrite_ans(self, popup, value):
+    #     popup.dismiss()
+    #     return value
 
     def update_volume(self, volume):
         if self._sound:
@@ -597,26 +612,31 @@ class UserInput(BoxLayout):
             if rename:
                 result = parse_kivy.renameScott(filename, rename)
                 if result == 'owrite':
-                    print("owrite")
-                    #popup to ask user if they want to overwrite
-                    #if yes: final_filename = parse_kivy.renameScott(filename, rename, overwrite=True)
-                    #elif no: do nothing
+                    print('owrite')
+                    # #popup to ask user if they want to overwrite
+                    # do_overwrite = self.overwrite_popup(rename)
+                    # print(do_overwrite)
+                    # #if yes: final_filename = parse_kivy.renameScott(filename, rename, overwrite=True)
+                    # #elif no: do nothing
                 else:
                     final_filename = result
 
             parse_kivy.wavFileHandler(final_filename, edit)
-
             #Update the EditingGrid to display accurate info
             index = GridOfButtons.get_row_index(self.editing_grid, filename)
             data = EditingGrid.info_from_file(self, final_filename)
             if data and index is not None:
                 GridOfButtons.edit_row(self.editing_grid, index, data)
+
+            #Update the network queue
+            self.network_queue.load('auto-add', [final_filename])
         else:
             error_msg = 'No file selected.'
             popup = Popup(title='Conversion/Editing Error.',
                     content=Label(text= error_msg),
                     size_hint = (0.3, 0.3))
             popup.open()
+
 
     def probe_text_input(self, user_data):
         #Takes the list of info from the user. If they are the correct
