@@ -183,8 +183,11 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
         else:
             end = len(self.children) - (index * self.cols)
             start = end - self.cols
+            #Update the selected file's info too.
+            if self.children[start].text == self._sel_file:
+                self._sel_file = data_to_write[-1]
             for i, widget in enumerate(reversed(self.children[start:end])):
-                widget.text = data_to_write[i]
+                widget.text = data_to_write[i].strip()
 
 
     def set_info(self, data_to_write, x_hint_list, num_rows_to_add = 3):
@@ -585,55 +588,66 @@ class UserInput(BoxLayout):
             popup.open()
 
 
-    def edit_scot(self, filename, *args, rename = ''):
-        #Takes in a variable amount of attributes. If they are the correct
-        #length, then they will be converted to the appropriate data type
-        #and added to an "edit" list. The edit list is then passed onto a
-        #function that writes the actual bytes to the file.
-
-        valid_len = (34, 43, 34, 4, 4, 1, 2, 6, 6, 6, 1, 1)
-        dtype = [("note", "str"), ("title", "str"), ("artist" ,"str"),
-                 ("audio_id", "str"), ("year", "str"), ("end", "str"),
-                 ("intro", "str"), ("eom", "int"), ("s_date", "str"), ("e_date", "str"),
-                 ("s_hour", "str"), ("e_hour", "str")]
-
-
-        edit = []
-        for i, attrib in enumerate(args):
-            if len(attrib) == valid_len[i]:
-                if dtype[i][1] == "int":
-                    if isinstance(attrib, int):
-                        attrib = int(attrib)
-                    else:
-                        print("---edit_scot Arg {} should be an int. Data: {}.---".format(i, attrib))
-            elif i < 3 and attrib:
-                attrib += " " * (valid_len[i] - len(attrib))
-            elif attrib:
-                print("---edit_scot Arg {} is the incorrect length. Data: {}---".format(i, attrib))
-                continue
-            name = dtype[i][0]
-            edit.append((name, attrib))
-
+    def modify_file(self, filename, user_data, rename=''):
+        #Sanitise the input. Then call a handler to deal with
+        #the specific file. Then update the grid to reflect changes.
         if filename:
-            ret_values = parse_kivy.wav_File_Handler(filename, edit, new_name = rename)
-            #Update the EditingGrid to display accurate info
-            if ret_values:
-                renamed, edited = ret_values
-                if renamed or edited:
-                    if renamed and edited:
-                        data = EditingGrid.info_from_file(self, renamed)
-                    else:
-                        data = EditingGrid.info_from_file(self, filename)
+            edit = self.probe_text_input(user_data)
+            final_filename = filename
+            if rename:
+                result = parse_kivy.renameScott(filename, rename)
+                if result == 'owrite':
+                    print("owrite")
+                    #popup to ask user if they want to overwrite
+                    #if yes: final_filename = parse_kivy.renameScott(filename, rename, overwrite=True)
+                    #elif no: do nothing
+                else:
+                    final_filename = result
 
-                    index = GridOfButtons.get_row_index(self.editing_grid, filename)
-                    if data and (index != None):
-                        GridOfButtons.edit_row(self.editing_grid, index, data)
+            parse_kivy.wavFileHandler(final_filename, edit)
+
+            #Update the EditingGrid to display accurate info
+            index = GridOfButtons.get_row_index(self.editing_grid, filename)
+            data = EditingGrid.info_from_file(self, final_filename)
+            if data and index is not None:
+                GridOfButtons.edit_row(self.editing_grid, index, data)
         else:
             error_msg = 'No file selected.'
             popup = Popup(title='Conversion/Editing Error.',
                     content=Label(text= error_msg),
                     size_hint = (0.3, 0.3))
             popup.open()
+
+    def probe_text_input(self, user_data):
+        #Takes the list of info from the user. If they are the correct
+        #length, then they will be converted to the appropriate data type
+        #and added to an "edit" list.
+
+        #should add namedTuples
+        # (name, data_type, length)
+        field_info = [
+            ('note', 'str', 34), ('title', 'str', 43), ('artist', 'str', 34),
+            ('audio_id', 'str', 4), ('year', 'str', 4), ('end', 'str', 1),
+            ('intro', 'str', 2), ('eom', 'int', 6), ('s_date', 'str', 6),
+            ('e_date', 'str', 6), ('s_hour', 'int', 1), ('e_hour', 'int', 1)
+        ]
+
+
+        edit = []
+        for i, attrib in enumerate(user_data):
+            if len(attrib) == field_info[i][2]:
+                if field_info[i][1] == 'int' and isinstance(attrib, int):
+                    attrib = int(attrib)
+                elif not field_info[i][1] == 'str':
+                    print("---probe_text_input Arg {} should be an int. Data: {}.---".format(i, attrib))
+            elif i < 3 and attrib:
+                attrib += " " * (field_info[i][2] - len(attrib))
+            elif attrib:
+                print("---probe_text_input Arg {} is the incorrect length. Data: {}---".format(i, attrib))
+                continue
+            name = field_info[i][0]
+            edit.append((name, attrib))
+        return edit
 
 
 
@@ -691,9 +705,8 @@ class StatsGrid(GridLayout):
             ('fact', 'No File Selected'), ('4????', 'No File Selected'),
             ('Number of Audio Samples', 'No File Selected'), ('Data', 'No File Selected'),
             ('file length - 512', 'No File Selected')]
-        print("hello")
+
         if self.sel_file_stats:
-            print("pass")
             headers = parse_kivy.getWavInfo(self.sel_file_stats)
         for i, label in enumerate(reversed(self.children)):
             label.text = str(headers[i // 2][ i % 2 ])

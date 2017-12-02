@@ -398,7 +398,7 @@ RootScreen:
             width: 100
             background_color: deep_blue
             background_normal: ""
-            on_press: root.edit_scot(root.path_name, note.text, title.text, artist.text, audio_id.text, year.text, ending.text, intro.text, eom.text, s_date.text, e_date.text, s_hour.text, e_hour.text, rename = rename.text)
+            on_press: root.modify_file(root.path_name, [note.text, title.text, artist.text, audio_id.text, year.text, ending.text, intro.text, eom.text, s_date.text, e_date.text, s_hour.text, e_hour.text], rename = rename.text)
 
 
 <Misc>:

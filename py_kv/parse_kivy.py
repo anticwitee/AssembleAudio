@@ -1,29 +1,19 @@
-def convertScott(source, dst, id_num = '0000', title_str = '', artist = ''):
-    #Assumes WAV
-
-    try:
-        header, data = processWav(source, title_str, id_num, artist)
-        writeScottFile(header, data, dst)
-    except IOError:
-        print("---ConvertScott: File {0} cannot be opened.".format(source))
+from os import rename
+from os.path import exists
+from os.path import splitext
+from os.path import join, isfile, dirname
 
 
 
-def writeScottFile(header, data, output_name):
-    """Takes in a list of byte objects 'header',
-        a list of byte objects 'data' and an 'output_name'
-        which is the new scott file. The scott file contains
-        the byte objects in header and data."""
+def writeScottFile(output_name, header, data):
+    """
+    Writes header and data information to a file.
 
-    from os.path import exists
-    from os.path import splitext
-
-    if exists(output_name):
-        basename, extension = splitext(output_name)
-        output_name = basename + '_new_scot' + extension
-        if exists(output_name):
-            print("File {} already exists.".format(output_name))
-            return
+    Takes in a list of byte objects 'header',
+    a list of byte objects 'data' and an 'output_name'
+    which is the new scott file. The scott file contains
+    the byte objects in header and data.
+    """
 
     with open(output_name, 'wb') as scott_file:
         for item in header:
@@ -33,115 +23,112 @@ def writeScottFile(header, data, output_name):
             scott_file.write(item)
 
 
-
-
-def wav_File_Handler(filename, edit_list, new_name = ''):
+def wavFileType(filename):
     #Given a file, the function will determine
     #whether it is a SCOT WAV file or just a
-    #regular WAV file. Based on the result,
-    #it will call the appropriate function
+    #regular WAV file.
 
-    from os.path import join, dirname
-
-    edit = False
-    conversion = False
     try:
         with open(filename, 'rb') as wav_file:
             wav_file.seek(8)
             is_wav_file = wav_file.read(4)
-            if is_wav_file == bytes('WAVE', 'ASCII'):
+            if not is_wav_file == bytes('WAVE', 'ASCII'):
+                return 'notwav'
+            else:
                 wav_file.seek(60)
                 scot = wav_file.read(4)
                 if scot == bytes('scot', 'ASCII'):
-                    edit = True
+                    return 'scottwav'
                 else:
-                    conversion = True
-            else:
-                print("Not a wav file:", is_wav_file)
+                    return 'wav'
+
     except IOError:
-        print("--Wav_File_Handler Error--")
+        print("--wavFileType Error--")
+        return 'error'
 
-    if edit:
-        return editScottWav(filename, edit_list, new_name = new_name)
-    elif conversion:
-        if new_name:
-            path = join(dirname(filename), new_name)
-            convertScott(filename, path)
+
+
+def wavFileHandler(filename, edit_list):
+    result = wavFileType(filename)
+    if result == 'scottwav':
+        editScottWav(filename, edit_list)
+    elif result == 'wav':
+        wavConvertScott(filename)
+    elif result == 'notwav':
+        return result
+    else:
+        return result
+
+
+
+def renameScott(filename, new_name, overwrite=False, add_dirname=True):
+    final_filename = filename
+    try:
+        if add_dirname:
+            new_name = join(dirname(filename), new_name)
+        if not overwrite and isfile(new_name):
+            print("---renameScott file {} already exists, not renaming.----".format(new_name))
+            return 'owrite'
         else:
-            convertScott(filename, filename)
+            rename(filename, new_name)
+            final_filename = new_name
+    except IOError:
+        print("---renameScott Cannot rename {} to {}.---".format(filename, new_name))
+    finally:
+        return final_filename
 
-def editScottWav(file_name, edit, new_name = ''):
-    #Edits the scott file 'file_name', optionally re-naming
+
+
+def editScottWav(filename, edit):
+    #Edits the scott file 'filename', optionally re-naming
     #the file.
-    from os import rename
-    from os.path import dirname, isfile, join
-
     addr = {"note" : 369, "title" : 72, "artist" : 335, "year" : 406, "audio_id" : 115,
             "end" : 405, "intro" : 403, "eom" : 152, "s_date" : 133,
             "e_date" : 139, "s_hour" : 145, "e_hour": 146}
 
-    temp_is_scott = False
-    renamed = False
-    edited = False
-
     try:
-        with open(file_name, 'rb+') as f:
-            f.seek(60)
-            if not f.read(4) == bytes("scot", "ASCII"):
-                print("---EditScott error, {} is not a SCOTTWAV file.---".format(file_name))
-            else:
-                for name, data in edit:
-                    f.seek(addr[name])
-                    if type(data) == type("str"):
-                        f.write(bytes(data, "ASCII"))
-                    else:
-                        #May be a more efficient way
-                        num_bytes = len(str(abs(data)))
-                        f.write((data).to_bytes(num_bytes, byteorder='little'))
-                edited = True
+        with open(filename, 'rb+') as f:
+            for name, data in edit:
+                f.seek(addr[name])
+                if isinstance(data, str):
+                    f.write(bytes(data, 'utf-8'))
+                else:
+                    num_bytes = len(str(abs(data)))
+                    f.write((data).to_bytes(num_bytes, byteorder='little'))
 
     except IOError:
-        print("---EditScott cannot open {}. ---".format(file_name))
-
-    if new_name:
-        try:
-            #don't want to rename while file is open.
-            new_f_name = join(dirname(file_name), new_name)
-            if isfile(new_f_name):
-                print("---EditScott file {} already exists, not renaming.----".format(new_f_name))
-            else:
-                rename(file_name, new_f_name)
-                renamed = new_f_name
-        except IOError:
-            print("---EditScott Cannot rename {} to {}.---".format(file_name, new_name))
-
-    return renamed, edited
+        print("---EditScott cannot open {}. ---".format(filename))
 
 
-def processWav(file_name, title_str, id_num, artist):
-    """Gather necessary info from a RIFF WAV header.
+
+def wavConvertScott(source, id_num ='0000', title_str='Default Title', artist='Default Artist'):
+    try:
+        header, data = processWav(source, title_str, id_num, artist)
+        writeScottFile(source, header, data)
+    except IOError:
+        print("---wavConvertScott: File {0} cannot be opened.".format(source))
+
+
+
+def processWav(filename, title_str, id_num, artist):
+    """Gather necessary info from a PCM WAV header.
 
     """
-    #> 40 constant is just the size of the FMT chunk
-    #possibly should adjust it to represent what I'm actually doing.
-    #Reading info from scott file that is converted is fuked.
-    #Due to indexes not lining up due to extra metadata...
-    #Strip?
-
-
+    #Standard PCM WAV headers are added to a header list.
+    #Which are later expanded on to include SCOTT headers.
 
     import wave
     header = []
     data = []
 
     #Doesn't work inside ctx manager due to wave.open
-    f = wave.open(file_name, 'rb')
+    f = wave.open(filename, 'rb')
     num_c = f.getnchannels()
     samp_width = f.getsampwidth()
     samp_rate =  f.getframerate()
     f.close()
 
-    with open(file_name, 'rb') as wav_file:
+    with open(filename, 'rb') as wav_file:
         riff = wav_file.read(4)
         header.append(bytes(riff))
 
@@ -194,7 +181,7 @@ def processWav(file_name, title_str, id_num, artist):
         src_data_size = wav_file.read(4)
         i_data_size = int.from_bytes(src_data_size, byteorder='little')
 
-        ExpandHeader(header, num_c, samp_width, samp_rate, i_data_size, f_size, title_str, id_num, artist)
+        expandHeader(header, num_c, samp_width, samp_rate, i_data_size, f_size, title_str, id_num, artist)
 
         sound_data = wav_file.read()
         if not len(sound_data) == i_data_size:
@@ -203,7 +190,7 @@ def processWav(file_name, title_str, id_num, artist):
 
     return (header, data)
 
-def ExpandHeader(header, num_c, samp_width, samp_rate, data_size, f_size, title_str, id_num, artist):
+def expandHeader(header, num_c, samp_width, samp_rate, data_size, f_size, title_str, id_num, artist):
     #Takes the 'header' info obtained from a source WAV file
     #and expands it to include neccessary info in a SCOTT header.
 
@@ -360,21 +347,19 @@ def ExpandHeader(header, num_c, samp_width, samp_rate, data_size, f_size, title_
                   b_num_samples, data, b_data_size])
 
 
-def info(file_name):
+def info(filename, step=4, stop=512):
 
     try:
-        with open(file_name, 'rb') as wav_file:
-            header_stop = 512
-            pointer = 4
+        with open(filename, 'rb') as wav_file:
+            print("Filename:", filename)
             total_read = 0
-            print("Filename:", file_name)
-            while total_read < header_stop:
-                print(wav_file.read(pointer))
+            while total_read < stop:
+                print(wav_file.read(step))
                 print("-----------------------ADDR: ", str(total_read) + "---", end = '')
-                total_read += pointer
+                total_read += step
                 print(total_read-1)
     except IOError:
-        print("---Info: File {0} cannot be opened.".format(file_name))
+        print("---Info: File {0} cannot be opened.".format(filename))
 
 
 
@@ -432,7 +417,8 @@ def getWavInfo(filename):
         with open(filename, 'rb') as wav_file:
             for header in header_data:
                 data = wav_file.read(header[1])
-                if header[2]:
+                isint = header[2]
+                if isint:
                     try:
                         data = int.from_bytes(data, byteorder='little')
                     except TypeError:
@@ -447,15 +433,3 @@ def getWavInfo(filename):
     except IOError:
         print("---getWavInfo couldn't open file {}---".format(filename))
     return header_list
-
-
-def simpleReWrite(source, dst):
-
-    source = open(source, 'rb')
-    dst = open(dst, 'wb')
-
-    for line in source:
-        dst.write(line)
-
-    source.close()
-    dst.close()
