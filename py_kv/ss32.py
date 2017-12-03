@@ -19,7 +19,7 @@ from kivy.uix.behaviors.compoundselection import CompoundSelectionBehavior
 from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.settings import SettingsWithSidebar
 from kivy.clock import Clock
-import parse_kivy
+import modify_wav
 
 
 from os.path import basename, splitext
@@ -421,7 +421,7 @@ class EditingGrid(GridLayout, GridOfButtons):
         print('Filenames: ', filenames)
 
         for filename in filenames:
-            data = parse_kivy.info_from_file(filename, EditingGrid.info_items)
+            data = modify_wav.info_from_file(filename, EditingGrid.info_items)
             if data:
                 data.extend([basename(filename), splitext(filename)[1], filename])
                 self.set_info(data)
@@ -482,7 +482,7 @@ class UserInput(BoxLayout):
         if filename:
             #Update the TextInputs to represent current-data.
             data = ['99:99:99']
-            data.extend(parse_kivy.info_from_file(filename, self.info_items))
+            data.extend(modify_wav.info_from_file(filename, self.info_items))
             data.append(basename(filename))
             data.insert(3, '00:00:00')
         else:
@@ -530,17 +530,17 @@ class UserInput(BoxLayout):
             edit = self.probe_text_inputs(user_data)
             final_filename = filename
             if rename != basename(filename):
-                result = parse_kivy.renameScott(filename, rename)
+                result = modify_wav.renameScott(filename, rename)
                 if result == 'owrite':
                     print('owrite')
                     #popup to ask user if they want to overwrite
                 else:
                     final_filename = result
 
-            parse_kivy.wavFileHandler(final_filename, edit)
+            modify_wav.wavFileHandler(final_filename, edit)
             #Update the EditingGrid to display accurate info
             index = GridOfButtons.get_row_index(self.editing_grid, filename)
-            data = parse_kivy.info_from_file(final_filename, EditingGrid.info_items)
+            data = modify_wav.info_from_file(final_filename, EditingGrid.info_items)
             if data and index is not None:
                 data.extend([basename(final_filename), splitext(final_filename)[1], final_filename])
                 GridOfButtons.edit_row(self.editing_grid, index, data)
@@ -753,7 +753,7 @@ class StatsGrid(GridLayout):
             ('file length - 512', 'No File Selected')]
 
         if self.sel_file_stats:
-            headers = parse_kivy.getWavInfo(self.sel_file_stats)
+            headers = modify_wav.getWavInfo(self.sel_file_stats)
         for i, label in enumerate(reversed(self.children)):
             label.text = str(headers[i // 2][ i % 2 ])
 
