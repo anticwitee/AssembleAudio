@@ -21,7 +21,7 @@ from kivy.uix.settings import SettingsWithSidebar
 from kivy.clock import Clock
 from kivy.lang.builder import Builder
 import modify_wav
-
+import json
 
 from os.path import basename, splitext
 
@@ -314,19 +314,35 @@ class CategoriesScroll(ScrollView):
 class CategoriesList(GridLayout, GridOfButtonsFChoose):
 
     x_hint_list = [0.35, 0.65]
+    json_file = 'categories.json'
 
     def __init__(self, **kwargs):
         super(CategoriesList, self).__init__(**kwargs)
         self.create_grid(CategoriesList.x_hint_list, 35)
+        #Temporary?
+        self.cols = 2
+        self.load_categories()
 
     def set_info(self, data_to_write):
         GridOfButtons.set_info(self, data_to_write, CategoriesList.x_hint_list)
 
 
+    def load_categories(self):
+        try:
+            with open(CategoriesList.json_file, 'r') as f:
+                cat_list = json.load(f)
+                for category in cat_list:
+                    data_to_write = [category['key'], category['desc']]
+                    self.set_info(data_to_write)
+        except IOError:
+            print("---CategoriesList--- Couldn't open JSON File.")
+
+
+
     #def load(self):
 
     #def grid_touch_actions(self): (or modify GridOfButtons)
-    
+
 
 
 class NetworkQueueHeader(BoxLayout):

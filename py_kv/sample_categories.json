@@ -1,0 +1,27 @@
+[
+    {
+        "desc" : "test_01",
+        "key" : "test_1",
+        "path" : "G:\\test_01"
+    },
+    {
+        "desc" : "test_02",
+        "key" : "test_2",
+        "path" : "G:\\test_02"
+    },
+    {
+        "desc" : "test_03",
+        "key" : "test_3",
+        "path" : "G:\\test_03"
+    },
+    {
+        "desc" : "test_04",
+        "key" : "test_4",
+        "path" : "G:\\test_04"
+    },
+    {
+        "desc" : "test_05",
+        "key" : "test_5",
+        "path" : "G:\\test_05"
+    }
+]
