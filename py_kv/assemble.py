@@ -19,6 +19,7 @@ from kivy.uix.behaviors.compoundselection import CompoundSelectionBehavior
 from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.settings import SettingsWithSidebar
 from kivy.clock import Clock
+from kivy.lang.builder import Builder
 import modify_wav
 
 
@@ -30,7 +31,7 @@ from os.path import basename, splitext
 from kivy.utils import get_color_from_hex
 from kivy.config import ConfigParser
 config = ConfigParser()
-config.read('assemble.ini')
+config.read('assembleaudio.ini')
 
 def set_up(cfg_ins):
     global cfg_recur_depth
@@ -787,12 +788,10 @@ class AssembleAudioApp(App):
     def build(self):
         self.settings_cls = SettingsWithSidebar
         self.use_kivy_settings = False
-        Builder.load_file('assemble.kv')
-        return
+        return Builder.load_file('assemble.kv')
 
     def build_config(self, config):
-        config.read('assemble.ini')
-
+        config.read('assembleaudio.ini')
 
     def build_settings(self, settings):
         settings.add_json_panel('AssembleAudio Configuration', self.config, 'conf.json')
