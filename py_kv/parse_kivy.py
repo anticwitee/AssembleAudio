@@ -372,6 +372,7 @@ def info_from_file(filename, info_items):
         'note': (369, 34, 'str'), 'title': (72, 43, 'str'), 'artist': (335, 34, 'str'),
         'audio_id': (115, 4, 'str'), 'year': (406, 4, 'str'), 'end': (405, 1, 'str'),
         'intro': (403, 2, 'str'), 'eom': (152, 6, 'int'), 's_date': (133, 6, 'str'),
+        's_hour': (145, 1, 'int'), 'e_date': (139, 6, 'str'), 'e_hour': (146, 1, 'int')
         }
 
     data_to_write = []
