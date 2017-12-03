@@ -257,6 +257,27 @@ class GridOfButtons(FocusBehavior, CompoundSelectionBehavior):
         return '{}'.format(length)
 
 
+class GridOfButtonsFChoose(GridOfButtons):
+
+    def show_load(self):
+        content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
+        self._popup = Popup(title='Load file', content=content,
+                            size_hint=(0.75, 0.75))
+        self._popup.open()
+
+    def load(self, path, filenames):
+        print(path, filenames)
+        for filename in filenames:
+            data_to_write = [basename(filename), filename]
+            self.set_info(data_to_write)
+
+        if path != 'auto-add':
+            self.dismiss_popup()
+
+    def dismiss_popup(self):
+        self._popup.dismiss()
+
+
 class RootScreen(BoxLayout):
     pass
 
@@ -268,6 +289,44 @@ class TopMenu(BoxLayout):
 class Frequent(BoxLayout):
     pass
 
+
+
+
+
+class CategoriesHeader(BoxLayout):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        x_hint_list = [0.35, 0.55]
+        cols = len(x_hint_list)
+        col_names = ['Name', 'Description']
+
+        for col in range(cols):
+            label = Label(text = col_names[col], size_hint_y = None, height = 30,
+                        size_hint_x = x_hint_list[col], bold = True)
+            self.add_widget(label)
+
+
+class CategoriesScroll(ScrollView):
+    pass
+
+
+class CategoriesList(GridLayout, GridOfButtonsFChoose):
+
+    x_hint_list = [0.35, 0.65]
+
+    def __init__(self, **kwargs):
+        super(CategoriesList, self).__init__(**kwargs)
+        self.create_grid(CategoriesList.x_hint_list, 35)
+
+    def set_info(self, data_to_write):
+        GridOfButtons.set_info(self, data_to_write, CategoriesList.x_hint_list)
+
+
+    #def load(self):
+
+    #def grid_touch_actions(self): (or modify GridOfButtons)
+    
 
 
 class NetworkQueueHeader(BoxLayout):
@@ -289,7 +348,7 @@ class NetworkQueueScroll(ScrollView):
     pass
 
 
-class NetworkQueue(GridLayout, GridOfButtons):
+class NetworkQueue(GridLayout, GridOfButtonsFChoose):
 
     x_hint_list = [0.45, 0.55]
 
@@ -300,12 +359,6 @@ class NetworkQueue(GridLayout, GridOfButtons):
     def set_info(self, data_to_write):
         GridOfButtons.set_info(self, data_to_write, NetworkQueue.x_hint_list)
 
-    #FileChooserMethods
-    def show_load(self):
-        content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
-        self._popup = Popup(title='Load file', content=content,
-                            size_hint=(0.75, 0.75))
-        self._popup.open()
 
     def load(self, path, filenames):
         print(path, filenames)
@@ -316,31 +369,30 @@ class NetworkQueue(GridLayout, GridOfButtons):
         if path != 'auto-add':
             self.dismiss_popup()
 
-    def dismiss_popup(self):
-        self._popup.dismiss()
 
     def __str__(self):
         source = '{} {}'.format('Source:', 'Network Queue')
         return '{}\n{}'.format(source, super().__str__())
 
+
 class NetworkCommands(BoxLayout):
 
-        def fetch_files(self):
-            pathnames = []
-            #needs changing
-            for i, widget in enumerate(self.children[::2]):
-                if widget.text:
-                    pathnames.append(widget.text)
-            self.send_files(pathnames)
+    def fetch_files(self):
+        pathnames = []
+        #needs changing
+        for i, widget in enumerate(self.children[::2]):
+            if widget.text:
+                pathnames.append(widget.text)
+        self.send_files(pathnames)
 
-        def send_files(self, pathnames):
-            pass
+    def send_files(self, pathnames):
+        pass
 
-        def display_log(self):
-            popup = Popup(title='Network Log',
-                    content=Label(text = 'Log is not implemented yet.'),
-                    size_hint = (0.3, 0.3))
-            popup.open()
+    def display_log(self):
+        popup = Popup(title='Network Log',
+                content=Label(text = 'Log is not implemented yet.'),
+                size_hint = (0.3, 0.3))
+        popup.open()
 
 
 class EditingGridHeader(BoxLayout):
@@ -363,7 +415,7 @@ class EditingGridScroll(ScrollView):
     pass
 
 
-class EditingGrid(GridLayout, GridOfButtons):
+class EditingGrid(GridLayout, GridOfButtonsFChoose):
 
     network_queue = ObjectProperty(None)
     user_input = ObjectProperty(None)
@@ -409,12 +461,6 @@ class EditingGrid(GridLayout, GridOfButtons):
     def set_info(self, data_to_write):
         GridOfButtons.set_info(self, data_to_write, EditingGrid.x_hint_list)
 
-    #FileChooserMethods
-    def show_load(self):
-        content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
-        self._popup = Popup(title='Load file', content=content,
-                            size_hint=(0.75, 0.75))
-        self._popup.open()
 
 
     def load(self, path, filenames):
@@ -428,10 +474,6 @@ class EditingGrid(GridLayout, GridOfButtons):
                 self.set_info(data)
         if path != 'Dropped files':
             self.dismiss_popup()
-
-
-    def dismiss_popup(self):
-        self._popup.dismiss()
 
 
     def __str__(self):

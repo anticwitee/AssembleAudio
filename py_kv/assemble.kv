@@ -114,31 +114,27 @@ RootScreen:
                             size: self.size
                     BoxLayout:
                         orientation: 'vertical'
-                        NetworkQueueHeader:
+                        CategoriesHeader:
                             size_hint_y: 0.05
 
-                        NetworkQueueScroll:
+                        CategoriesScroll:
                             canvas.before:
                                 Color:
                                     rgba: v_dark_grey
                                 Rectangle:
                                     pos: self.pos
                                     size: self.size
-                            size_hint_y: 0.9
+                            size_hint_y: 0.95
                             bar_width: 10
                             scroll_type: ['bars']
-                            NetworkQueue:
-                                id: network_grid
+                            CategoriesList:
                                 spacing: 1
                                 cols: 2
                                 size_hint_y: None
                                 height: self.minimum_height
-                        NetworkCommands:
-                            size_hint_y: 0.05
-
                 BoxLayout:
                     #Middle/Editing Container
-                    size_hint_x: 0.8
+                    size_hint_x: 0.6
                     orientation: 'vertical'
                     BoxLayout:
                         size_hint_y: 0.6
@@ -176,6 +172,39 @@ RootScreen:
                             size_hint_y: 0.15
                             cols: 4
                             spacing: 10
+                BoxLayout:
+                    #Right hand side container
+                    size_hint_x: 0.2
+                    orientation: "vertical"
+                    canvas.before:
+                        Color:
+                            rgba: medium_blue
+                        Rectangle:
+                            pos: self.pos
+                            size: self.size
+                    BoxLayout:
+                        orientation: 'vertical'
+                        NetworkQueueHeader:
+                            size_hint_y: 0.05
+
+                        NetworkQueueScroll:
+                            canvas.before:
+                                Color:
+                                    rgba: v_dark_grey
+                                Rectangle:
+                                    pos: self.pos
+                                    size: self.size
+                            size_hint_y: 0.9
+                            bar_width: 10
+                            scroll_type: ['bars']
+                            NetworkQueue:
+                                id: network_grid
+                                spacing: 1
+                                cols: 2
+                                size_hint_y: None
+                                height: self.minimum_height
+                        NetworkCommands:
+                            size_hint_y: 0.05
 
         Screen:
             name: 'stats'
@@ -222,6 +251,14 @@ RootScreen:
 
 <Frequent>:
 
+
+<CategoriesHeader>:
+    canvas.before:
+        Color:
+            rgba: v_dark_grey
+        Rectangle:
+            pos: self.pos
+            size: self.size
 
 <NetworkQueueHeader>:
     canvas.before:
