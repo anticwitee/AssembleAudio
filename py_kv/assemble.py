@@ -23,6 +23,8 @@ from kivy.lang.builder import Builder
 import modify_wav
 import json
 
+from os import listdir
+from os.path import isfile, join
 from os.path import basename, splitext
 
 #widget.walk(restrict=True)
@@ -313,6 +315,7 @@ class CategoriesScroll(ScrollView):
 
 class CategoriesList(GridLayout, GridOfButtonsFChoose):
 
+    editing_grid = ObjectProperty(None)
     x_hint_list = [0.35, 0.65]
     json_file = 'categories.json'
 
@@ -321,10 +324,28 @@ class CategoriesList(GridLayout, GridOfButtonsFChoose):
         self.create_grid(CategoriesList.x_hint_list, 35)
         #Temporary?
         self.cols = 2
+        self.cat_to_path = {}
         self.load_categories()
 
     def set_info(self, data_to_write):
         GridOfButtons.set_info(self, data_to_write, CategoriesList.x_hint_list)
+
+
+    def grid_touch_actions(self, child, touch):
+        if child.collide_point(touch.x, touch.y):
+            if touch.is_double_tap and touch.button == 'left':
+                child_pos = self.children.index(child)
+                if child_pos % 2 == 0:
+                    name_of_category = self.children[child_pos + 1].text
+                else:
+                    name_of_category = child.text
+
+                directory = self.cat_to_path[name_of_category]
+                files = self.editing_grid.files_from_directory(directory, depth = 10)
+                self.editing_grid.clear_grid()
+                self.editing_grid.load('cat_list', files)
+            else:
+                super().grid_touch_actions(child, touch)
 
 
     def load_categories(self):
@@ -334,6 +355,7 @@ class CategoriesList(GridLayout, GridOfButtonsFChoose):
                 for category in cat_list:
                     data_to_write = [category['key'], category['desc']]
                     self.set_info(data_to_write)
+                    self.cat_to_path[category['key']] = category['path']
         except IOError:
             print("---CategoriesList--- Couldn't open JSON File.")
 
@@ -461,18 +483,21 @@ class EditingGrid(GridLayout, GridOfButtonsFChoose):
 
 
     def files_from_directory(self, directory, depth = cfg_recur_depth):
-        from os import listdir
-        from os.path import isfile, join
-
-        file_list = []
-        for a_path in listdir(directory):
-            a_path = join(directory, a_path)
-            if isfile(a_path):
-                file_list.append(a_path)
-            elif depth > 1:
-                file_list.extend(self.files_from_directory(a_path, depth = depth - 1))
-        return file_list
-
+        try:
+            file_list = []
+            for a_path in listdir(directory):
+                a_path = join(directory, a_path)
+                if isfile(a_path):
+                    file_list.append(a_path)
+                elif depth > 1:
+                    file_list.extend(self.files_from_directory(a_path, depth=depth - 1))
+            return file_list
+        except IOError:
+            error_header = '---files_from_directory---'
+            error_msg = '---Directory {} or one of its children is not a valid directory---'.format(directory)
+            print(error_header)
+            print(error_msg)
+            return []
 
     def set_info(self, data_to_write):
         GridOfButtons.set_info(self, data_to_write, EditingGrid.x_hint_list)
@@ -488,7 +513,7 @@ class EditingGrid(GridLayout, GridOfButtonsFChoose):
             if data:
                 data.extend([basename(filename), splitext(filename)[1], filename])
                 self.set_info(data)
-        if path != 'Dropped files':
+        if path != 'Dropped files' and path != 'cat_list':
             self.dismiss_popup()
 
 
