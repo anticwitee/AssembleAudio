@@ -30,9 +30,9 @@ from os.path import basename, splitext
 from kivy.utils import get_color_from_hex
 from kivy.config import ConfigParser
 config = ConfigParser()
-config.read('ss32.ini')
+config.read('assemble.ini')
 
-def set_up(cfg_ins, filename):
+def set_up(cfg_ins):
     global cfg_recur_depth
     cfg_recur_depth = cfg_ins.getdefaultint('internals', 'recursion_depth', 1)
 
@@ -82,7 +82,7 @@ def set_up(cfg_ins, filename):
 
 
 
-set_up(config, 'ss32.kv')
+set_up(config)
 
 
 
@@ -757,7 +757,7 @@ class StatsGrid(GridLayout):
         for i, label in enumerate(reversed(self.children)):
             label.text = str(headers[i // 2][ i % 2 ])
 
-class ss32App(App):
+class AssembleAudioApp(App):
 
     def get_primary_deep(self):
         return raw_primary_deep
@@ -787,14 +787,15 @@ class ss32App(App):
     def build(self):
         self.settings_cls = SettingsWithSidebar
         self.use_kivy_settings = False
+        Builder.load_file('assemble.kv')
         return
 
     def build_config(self, config):
-        config.read('ss32.ini')
+        config.read('assemble.ini')
 
 
     def build_settings(self, settings):
-        settings.add_json_panel('SS32 Conf', self.config, 'conf.json')
+        settings.add_json_panel('AssembleAudio Configuration', self.config, 'conf.json')
 
 
     def on_config_change(self, config, section, key, value):
@@ -803,4 +804,4 @@ class ss32App(App):
 
 
 if __name__ == '__main__':
-    ss32App().run()
+    AssembleAudioApp().run()
