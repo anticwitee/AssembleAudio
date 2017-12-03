@@ -7,7 +7,7 @@ The 'SCOT' formatted file is then sent over the network, usually to a dispatch s
 The program is intended to be a replacement for TLC (Trim, Label, Convert), which is the
 program SCOTT STUDIOS provides to manipulate 'SCOT' files.
 
-The interface for this program is build using [Kivy](https://kivy.org Kivy Homepage).
+The interface for this program is build using [Kivy](https://kivy.org "Kivy Homepage").
 
 ## Implemented features
 
