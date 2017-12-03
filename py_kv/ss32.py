@@ -794,7 +794,7 @@ class ss32App(App):
 
 
     def build_settings(self, settings):
-        settings.add_json_panel('SS32 Conf', self.config, 'ss32.json')
+        settings.add_json_panel('SS32 Conf', self.config, 'conf.json')
 
 
     def on_config_change(self, config, section, key, value):
