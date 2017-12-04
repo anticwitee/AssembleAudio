@@ -1,19 +1,20 @@
     names = [
-"RIFF", "File length - 8", "WAVE", "fmt", "FMT Chunk size",
-"Format Category", "Number of channels", "Sampling Rate", "Avg bytes/sec",
-"Data block size", "Format", "White space", "scot", "424 Constant",
-"Alter(scratchpad)", "Attrib(scratchpad)", "Artnum(scratchpad)",
-"Title", "ID", "Padding", "Approx duration", "Cue-in (secs)",
-"Cue-in (hundredths)", "Total Length (seconds)", "Total Length (hundredths)",
-"Start Date", "End date", "Start hour", "End hour", "Digital",
-"Sample Rate", "Mono/Stereo", "Compress", "Eomstrt", "EOM (Hundredths from end)",
-"Attrib2", "Future", "catfontcolor", "catcolor", "segeompos", "vtstartsecs",
-"vtstarthunds", "priorcat", "priorcopy", "priorpadd", "postcat", "postcopy",
-"postpadd", "hrcanplay", "future", "Artist", "Note", "Intro", "End",
-"Year", "Obsolete2", "Hour Recorded", "Date Recorded", "Mpegbitrate",
-"Pitch", "playlevel", "lenvalid", "filelength", "desiredlen", "triggers[4]",
-"fillout", "fact", "4????", "Number of Audio Samples", "Data", "file length - 512"
-]
+			"RIFF", "File length - 8", "WAVE", "fmt", "FMT Chunk size",
+			"Format Category", "Number of channels", "Sampling Rate", "Avg bytes/sec",
+			"Data block size", "Format", "White space", "scot", "424 Constant",
+			"Alter(scratchpad)", "Attrib(scratchpad)", "Artnum(scratchpad)",
+			"Title", "ID", "Padding", "Approx duration", "Cue-in (secs)",
+			"Cue-in (hundredths)", "Total Length (seconds)", "Total Length (hundredths)",
+			"Start Date", "End date", "Start hour", "End hour", "Digital",
+			"Sample Rate", "Mono/Stereo", "Compress", "Eomstrt", "EOM (Hundredths from end)",
+			"Attrib2", "Future", "catfontcolor", "catcolor", "segeompos", "vtstartsecs",
+			"vtstarthunds", "priorcat", "priorcopy", "priorpadd", "postcat", "postcopy",
+			"postpadd", "hrcanplay", "future", "Artist", "Note", "Intro", "End",
+			"Year", "Obsolete2", "Hour Recorded", "Date Recorded", "Mpegbitrate",
+			"Pitch", "playlevel", "lenvalid", "filelength", "newplaylev", "chopsize",
+			"vteomovr", "desiredlen", "triggers[4]", "fillout", "fact", "4????",
+			"Number of Audio Samples", "Data", "file length - 512"
+			]
 
     length = (4, 4, 4, 4, 4, 2,
               2, 4, 4, 2,

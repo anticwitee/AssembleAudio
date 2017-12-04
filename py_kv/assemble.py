@@ -357,7 +357,7 @@ class CategoriesList(GridLayout, GridOfButtonsFChoose):
                     self.set_info(data_to_write)
                     self.cat_to_path[category['key']] = category['path']
         except IOError:
-            print("---CategoriesList--- Couldn't open JSON File.")
+            print('---CategoriesList--- Could not open JSON File.')
 
 
 
@@ -790,9 +790,11 @@ class StatsGrid(GridLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.create_stats()
+        self.previous_file = None
+        self.prev_data = {}
 
     def create_stats(self):
-        num_labels = 70 * 2
+        num_labels = 74 * 2
         for i in range(num_labels):
             label = Label(shorten=True)
             label.bind(size=label.setter('text_size'))
@@ -800,46 +802,43 @@ class StatsGrid(GridLayout):
         self.get_stats()
 
     def get_stats(self):
-        headers = [('RIFF', 'No File Selected'), ('File length - 8', 'No File Selected'),
-            ('WAVE', 'No File Selected'), ('fmt', 'No File Selected'), ('FMT Chunk size', 'No File Selected'),
-            ('Format Category', 'No File Selected'), ('Number of channels', 'No File Selected'),
-            ('Sampling Rate', 'No File Selected'), ('Avg bytes/sec', 'No File Selected'),
-            ('Data block size', 'No File Selected'), ('Format', 'No File Selected'),
-            ('White space', 'No File Selected'), ('scot', 'No File Selected'),
-            ('424 Constant', 'No File Selected'), ('Alter(scratchpad)', 'No File Selected'),
-            ('Attrib(scratchpad)', 'No File Selected'), ('Artnum(scratchpad)', 'No File Selected'),
-            ('Title', 'No File Selected'), ('ID', 'No File Selected'), ('Padding', 'No File Selected'),
-            ('Approx duration', 'No File Selected'), ('Cue-in (secs)', 'No File Selected'),
-            ('Cue-in (hundredths)', 'No File Selected'), ('Total Length (seconds)', 'No File Selected'),
-            ('Total Length (hundredths)', 'No File Selected'), ('Start Date', 'No File Selected'),
-            ('End date', 'No File Selected'), ('Start hour', 'No File Selected'),
-            ('End hour', 'No File Selected'), ('Digital', 'No File Selected'),
-            ('Sample Rate', 'No File Selected'), ('Mono/Stereo', 'No File Selected'),
-            ('Compress', 'No File Selected'), ('Eomstrt', 'No File Selected'),
-            ('EOM (Hundredths from end)', 'No File Selected'), ('Attrib2', 'No File Selected'),
-            ('Future', 'No File Selected'), ('catfontcolor', 'No File Selected'),
-            ('catcolor', 'No File Selected'), ('segeompos', 'No File Selected'),
-            ('vtstartsecs', 'No File Selected'), ('vtstarthunds', 'No File Selected'),
-            ('priorcat', 'No File Selected'), ('priorcopy', 'No File Selected'),
-            ('priorpadd', 'No File Selected'), ('postcat', 'No File Selected'),
-            ('postcopy', 'No File Selected'), ('postpadd', 'No File Selected'),
-            ('hrcanplay', 'No File Selected'), ('future', 'No File Selected'),
-            ('Artist', 'No File Selected'), ('Note', 'No File Selected'),
-            ('Intro', 'No File Selected'), ('End', 'No File Selected'),
-            ('Year', 'No File Selected'), ('Obsolete2', 'No File Selected'),
-            ('Hour Recorded', 'No File Selected'), ('Date Recorded', 'No File Selected'),
-            ('Mpegbitrate', 'No File Selected'), ('Pitch', 'No File Selected'),
-            ('playlevel', 'No File Selected'), ('lenvalid', 'No File Selected'),
-            ('filelength', 'No File Selected'), ('desiredlen', 'No File Selected'),
-            ('triggers[4]', 'No File Selected'), ('fillout', 'No File Selected'),
-            ('fact', 'No File Selected'), ('4????', 'No File Selected'),
-            ('Number of Audio Samples', 'No File Selected'), ('Data', 'No File Selected'),
-            ('file length - 512', 'No File Selected')]
-
+        headers = [
+        'RIFF', 'File length - 8', 'WAVE', 'fmt', 'FMT Chunk size',
+        'Format Category', 'Number of channels', 'Sampling Rate', 'Avg bytes/sec',
+        'Data block size', 'Format', 'White space', 'scot', '424 Constant',
+        'Alter(scratchpad)', 'Attrib(scratchpad)', 'Artnum(scratchpad)',
+        'Title', 'ID', 'Padding', 'Approx duration', 'Cue-in (secs)',
+        'Cue-in (hundredths)', 'Total Length (seconds)', 'Total Length (hundredths)',
+        'Start Date', 'End date', 'Start hour', 'End hour', 'Digital',
+        'Sample Rate', 'Mono/Stereo', 'Compress', 'Eomstrt', 'EOM (Hundredths from end)',
+        'Attrib2', 'Future', 'catfontcolor', 'catcolor', 'segeompos', 'vtstartsecs',
+        'vtstarthunds', 'priorcat', 'priorcopy', 'priorpadd', 'postcat', 'postcopy',
+        'postpadd', 'hrcanplay', 'future', 'Artist', 'Note', 'Intro', 'End',
+        'Year', 'Obsolete2', 'Hour Recorded', 'Date Recorded', 'Mpegbitrate',
+        'Pitch', 'playlevel', 'lenvalid', 'filelength', 'newplaylev', 'chopsize', 'vteomovr', 'desiredlen', 'triggers[4]', 'fillout', 'fact', '4????',
+        'Number of Audio Samples', 'Data', 'file length - 512'
+        ]
+        
+        headers = [(header, 'No File Selected') for header in headers]
         if self.sel_file_stats:
+            for i, label in enumerate(reversed(self.children[1::2])):
+                self.prev_data[label.text] = self.children[-1 -1 -(i*2)].text
             headers = modify_wav.getWavInfo(self.sel_file_stats)
         for i, label in enumerate(reversed(self.children)):
             label.text = str(headers[i // 2][ i % 2 ])
+
+        if self.sel_file_stats:
+            if self.previous_file == self.sel_file_stats:
+                for i, label in enumerate(reversed(self.children[1::2])):
+                    if self.prev_data[label.text] != self.children[-1 -1 -(i*2)].text:
+                        self.children[-1 -1 -(i*2)].color = (1, 0, 0, 1)
+                        print('----{}----'.format(label.text))
+                        print('Prev:', self.prev_data[label.text])
+                        print('New:', self.children[-1 -1 -(i*2)].text)
+                    else:
+                        self.children[-1 -1 -(i*2)].color = (1, 1, 1, 1)
+        self.previous_file = self.sel_file_stats
+
 
 class AssembleAudioApp(App):
 
